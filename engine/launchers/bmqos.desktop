@@ -1,0 +1,12 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=BMQOS
+GenericName=AI Agent Engine & Control Panel
+Comment=Start BMQOS Local Services and Open Web Interface
+Exec=bash -c 'cd "$(dirname "%k")/.." && npm run start:all'
+Icon=bmqos
+Terminal=true
+Categories=Development;Office;Utility;
+Keywords=ai;agent;bmqos;engine;
+StartupNotify=true

@@ -1,0 +1,19 @@
+services:
+  engine:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: crew-engine
+    restart: unless-stopped
+    ports:
+      # localhost only by default; set BIND=0.0.0.0 to expose it (keep CREW_API_TOKEN secret)
+      - "${BIND:-127.0.0.1}:${PORT:-3800}:3800"
+    environment:
+      - NODE_ENV=production
+      - PORT=3800
+      - CREW_URL=http://localhost:3800
+    env_file:
+      - path: .env
+        required: false
+    volumes:
+      - ./data:/app/data

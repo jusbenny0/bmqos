@@ -1,0 +1,25 @@
+services:
+  bmqos:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: bmqos:latest
+    container_name: bmqos
+    restart: unless-stopped
+    ports:
+      # localhost only by default (auth is off by default). Put a reverse proxy / tunnel in front, or set BIND=0.0.0.0 with OS_AUTH=password.
+      - "${BIND:-127.0.0.1}:${PORT:-3000}:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - HOSTNAME=0.0.0.0
+      - OS_DB=/app/data/os.db
+    env_file:
+      - path: .env
+        required: false
+    volumes:
+      - bmqos-data:/app/data
+
+volumes:
+  bmqos-data:
+    driver: local

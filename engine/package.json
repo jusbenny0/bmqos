@@ -1,0 +1,35 @@
+{
+  "name": "crew-engine",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -H 0.0.0.0 -p 3800",
+    "build": "next build",
+    "start": "next start -H 0.0.0.0 -p 3800",
+    "mcp": "tsx mcp/server.mts",
+    "test:mcp": "tsx scripts/mcp-test.mts",
+    "test:retro": "tsx scripts/retro-test.mts",
+    "typecheck": "tsc --noEmit",
+    "start:all": "node scripts/start-all.mjs"
+  },
+  "bin": {
+    "bmqos": "./scripts/bmqos"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "better-sqlite3": "^12.0.0",
+    "next": "^15.5.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.0.0",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "tailwindcss": "^4.0.0",
+    "tsx": "^4.23.15",
+    "typescript": "^5.6.0"
+  }
+}

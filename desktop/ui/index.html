@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>BMQOS</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="style.css"></head>
+<body><main>
+  <div class="mark">bmq<span>os</span></div>
+  <h1 id="title">Connecting…</h1>
+  <p id="msg" class="muted"></p>
+  <form id="f">
+    <label for="url">OS address</label>
+    <input id="url" type="text" spellcheck="false" autocomplete="off" placeholder="http://localhost:3000">
+    <div class="row"><button type="submit" id="retry">Try again</button></div>
+    <details id="adv"><summary>Settings</summary>
+      <label for="sc">Global shortcut</label>
+      <input id="sc" type="text" spellcheck="false" autocomplete="off" placeholder="Super+K">
+      <label class="chk"><input id="auto" type="checkbox"> Launch at login</label>
+      <div class="row"><button type="button" id="save" class="ghost">Save settings</button></div>
+    </details>
+  </form>
+  <p id="note" class="muted small"></p>
+</main><script src="app.js"></script></body></html>

@@ -1,0 +1,87 @@
+@import "tailwindcss";
+
+/* Tokens: docs/DESIGN.md. The names --bg/--surface/--border/--fg/--muted/--accent are a contract with the UI. */
+/* Light = default; dark = prefers-color-scheme or manual data-theme="dark" (toggle in nav). */
+:root {
+  color-scheme: light;
+  --bg: #f6f6f8; --surface: #ffffff; --surface-2: #eeeef2; --border: #e2e2e8;
+  --fg: #101014; --muted: #62676f; --accent: #4f46e5;
+  --ok: #047857; --warn: #b45309; --err: #dc2626; --info: #2563eb;
+  --ok-bg: #d1fae5; --warn-bg: #fef3c7; --err-bg: #fee2e2; --info-bg: #dbeafe; --idle-bg: #ececf0;
+  --radius: 10px;
+  --shadow: 0 1px 2px rgb(16 16 20 / .06), 0 4px 14px rgb(16 16 20 / .04);
+  --ease: cubic-bezier(.2, .8, .2, 1);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+  color-scheme: dark;
+  --bg: #0b0c10; --surface: #14161b; --surface-2: #1b1e25; --border: #262a33;
+  --fg: #f4f5f7; --muted: #9aa0ab; --accent: #818cf8;
+  --ok: #34d399; --warn: #fbbf24; --err: #f87171; --info: #60a5fa;
+  --ok-bg: #34d3991f; --warn-bg: #fbbf241f; --err-bg: #f871711f; --info-bg: #60a5fa1f; --idle-bg: #ffffff12;
+  --shadow: 0 1px 2px rgb(0 0 0 / .4), 0 6px 18px rgb(0 0 0 / .25);
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0b0c10; --surface: #14161b; --surface-2: #1b1e25; --border: #262a33;
+  --fg: #f4f5f7; --muted: #9aa0ab; --accent: #818cf8;
+  --ok: #34d399; --warn: #fbbf24; --err: #f87171; --info: #60a5fa;
+  --ok-bg: #34d3991f; --warn-bg: #fbbf241f; --err-bg: #f871711f; --info-bg: #60a5fa1f; --idle-bg: #ffffff12;
+  --shadow: 0 1px 2px rgb(0 0 0 / .4), 0 6px 18px rgb(0 0 0 / .25);
+}
+
+html, body {
+  background: var(--bg);
+  color: var(--fg);
+  font: 14px/1.5 Inter, ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 12px 14px;
+  transition: border-color .15s var(--ease), background .15s var(--ease);
+}
+.card:hover { border-color: var(--muted); }
+a.card:hover, .lift:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgb(0 0 0 / .12); }
+.lift { transition: transform .15s var(--ease), box-shadow .15s var(--ease), border-color .15s var(--ease); }
+.num { font-size: 26px; font-weight: 700; letter-spacing: -.02em; font-variant-numeric: tabular-nums; line-height: 1.1; }
+html, body { overflow-x: hidden; }
+img, svg, video, table { max-width: 100%; }
+@media (max-width: 640px) { pre, code { white-space: pre-wrap; overflow-wrap: anywhere; } }
+
+.pill {
+  --c: var(--muted); --b: var(--idle-bg);
+  display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+  padding: 2px 9px 2px 8px; border-radius: 999px;
+  font-size: 12px; font-weight: 600; color: var(--c); background: var(--b);
+}
+.pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.pill-ok { --c: var(--ok); --b: var(--ok-bg); }
+.pill-warn { --c: var(--warn); --b: var(--warn-bg); }
+.pill-err { --c: var(--err); --b: var(--err-bg); }
+.pill-info { --c: var(--info); --b: var(--info-bg); }
+.pill-info::before { animation: pulse 1.6s var(--ease) infinite; }
+
+.board { display: flex; gap: 12px; overflow-x: auto; align-items: flex-start; }
+.board-col {
+  flex: 0 0 280px; display: flex; flex-direction: column; gap: 8px;
+  background: var(--surface-2); border-radius: var(--radius); padding: 8px;
+}
+.board-col > h3 {
+  font-size: 12px; font-weight: 600; letter-spacing: .04em;
+  text-transform: uppercase; color: var(--muted); padding: 4px 6px;
+}
+@media (max-width: 640px) {
+  .board { flex-direction: column; }
+  .board-col { flex-basis: auto; width: 100%; }
+}
+
+@keyframes pulse { 50% { opacity: .35; } }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}

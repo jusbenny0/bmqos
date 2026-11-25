@@ -1,0 +1,61 @@
+# BMQOS
+
+> BMQOS is an open-source web control panel and operating system for running a company with AI agents.
+
+BMQOS brings autonomous AI agents, human oversight, and organizational workflows into a single unified desktop and web workspace. It features real-time task coordination, an inbox with approval cards for sensitive agent actions, team and service telemetry, audit logging, and an optional native Linux desktop companion.
+
+## Quickstart for Agents
+
+Tell your agent: install github.com/jusbenny0/bmqos
+
+1. Clone: `git clone https://github.com/jusbenny0/bmqos.git && cd bmqos`
+2. Install: `npm ci` (Node.js 24)
+3. Configure:
+   - `cp .env.example .env`
+   - Set `OS_SESSION_SECRET` (minimum 32 random characters)
+   - Generate password hash: `npm run hash -- 'your-password'` and set `OS_PASSWORD_HASH`
+   - Set `OS_USER=admin`
+   - Note: Leave integration URLs (`HERMES_API_URL`, `CREW_API_URL`, `PAPERCLIP_API_URL`) unset for zero-dependency Demo Mode.
+4. Run:
+   - Dev: `npm run dev` (http://localhost:3000)
+   - Build & Start: `npm run build && npm start`
+   - Docker: `docker compose up -d`
+5. Verify:
+   - `npm run typecheck` (tsc --noEmit)
+   - `npm test` (native test runner in tests/*.test.mts)
+   - `curl -i http://localhost:3000/login` (HTTP 200)
+
+## Repository Structure
+
+- `app/`: Next.js App Router pages, layouts, styles (`os.css`, `shell.css`), and REST/SSE API routes (`/api/*`).
+- `components/`: UI components for desktop shell, window management, chat, inbox, telemetry charts, and modals.
+- `lib/`: Core backend logic: authentication, SQLite database (`db.ts`), agent chat (`hermes.ts`), task orchestration (`crew.ts`), redaction (`redact.ts`), and service monitoring.
+- `engine/`: Bundled agent workforce engine (Next.js + SQLite, port 3800): CEO/builder/reviewer/QA agents on the Claude Code CLI, Crew API, MCP server (`engine/mcp/server.mts`), launchers. Own `package.json`; install with `npm run engine:install`, run panel + engine with `npm run start:all`.
+- `desktop/`: Native Linux desktop companion app built with Tauri 2 (Rust).
+- `scripts/`: CLI utilities including `hash.mjs` (scrypt password hashing).
+- `tests/`: End-to-end and unit test suites (*.test.mts).
+- `public/`: Static web assets, web push service worker, fonts, and icons.
+- `Dockerfile` & `docker-compose.yml`: Multi-stage production container setup with volume persistence.
+
+## Development & Testing Commands
+
+- `npm run dev`: Start local development server on port 3000
+- `npm run build`: Compile standalone production Next.js build
+- `npm run start`: Start production server
+- `npm run typecheck`: Run TypeScript compiler check (`tsc --noEmit`)
+- `npm test`: Run test suite (`node --conditions react-server --import tsx --test tests/*.test.mts`)
+- `npm run hash -- '<password>'`: Generate scrypt password hash for `.env`
+
+## Agent Guardrails & Conventions
+
+- Do not commit `.env` or any credential files.
+- Do not push directly to remote git repositories.
+- Do not modify LICENSE.
+- Do not execute destructive system commands.
+- Keep changes surgical, run `npm run typecheck` and `npm test` before finishing tasks.
+
+## Documentation Links
+
+- [Agent Guidelines](AGENTS.md): Detailed installation instructions, agent workflows, and security guardrails.
+- [Environment Configuration](.env.example): Comprehensive template with documentation for all runtime environment variables.
+- [Desktop Application](desktop/README.md): Setup and build instructions for the Tauri 2 Linux desktop wrapper.
