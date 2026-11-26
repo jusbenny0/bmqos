@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>BMQOS Installer</title>
+<link rel="stylesheet" href="style.css"></head>
+<body><main>
+<h1>BMQOS Installer</h1>
+<ol id="steps"><li>Check</li><li>Install</li><li>AI services</li><li>Configure</li><li>Launch</li></ol>
+<section id="s0"><h2>Your system</h2><ul id="env"></ul>
+<label>Install folder <input id="dir"></label>
+<p id="envmsg" class="muted"></p><button id="recheck" class="ghost">Re-check</button> <button id="to1">Continue</button></section>
+<section id="s1" hidden><h2>Download and install</h2><p class="muted">Clones BMQOS and installs panel and engine dependencies.</p><button id="go1">Install</button></section>
+<section id="s2" hidden><h2>AI services</h2><div id="providers"></div><div id="groups"></div>
+<label>Default playbook <select id="playbook"></select></label><button id="to3">Continue</button></section>
+<section id="s3" hidden><h2>Configure</h2>
+<label>Company <input id="company" value="My AI Company"></label>
+<label>Owner <input id="owner" value="Admin"></label>
+<label>Port <input id="port" type="number" value="3000"></label>
+<button id="go3">Write .env and roles</button></section>
+<section id="s4" hidden><h2>Launch</h2><label class="row"><input id="start" type="checkbox" checked> Start BMQOS now (<code>npm run start:all</code>)</label>
+<button id="go4">Finish</button></section>
+<p id="msg" role="status"></p>
+<pre id="log" aria-live="polite"></pre>
+</main><script src="app.js"></script></body></html>

@@ -422,7 +422,7 @@ async function askPlaybook(ids, engineDir) {
 }
 
 // Detect AI services, let the user pick one per role group (or take the best with interactive=false), write engine roles.
-export async function runProviderSetup({ interactive = false, engineDir = ENGINE_DIR, detectOpts } = {}) {
+export async function runProviderSetup({ interactive = false, engineDir = ENGINE_DIR, detectOpts, selection } = {}) {
   const P = await import("../engine/lib/providers.ts");
   const { DEFAULT_TEAM, listPresets, loadPreset } = await import("../engine/lib/config.ts");
   const found = await P.detect(detectOpts);
@@ -431,7 +431,7 @@ export async function runProviderSetup({ interactive = false, engineDir = ENGINE
     const note = P.supportNote(p);
     console.log(`  ${p.available ? "[x]" : "[ ]"} ${p.id.padEnd(15)} ${p.kind.padEnd(17)} ${p.detail}${note ? ` (${note})` : ""}`);
   }
-  const choice = P.plan(found);
+  const choice = { ...P.plan(found), ...selection?.choice };
   if (interactive) {
     const usable = found.filter(P.isSupported).map((p) => p.id);
     const rl = readline.createInterface({ input, output });
@@ -442,13 +442,22 @@ export async function runProviderSetup({ interactive = false, engineDir = ENGINE
     }
     rl.close();
   }
-  const personas = interactive ? await askPersonas(listPresets(), loadPreset) : {};
+  const personas = interactive ? await askPersonas(listPresets(), loadPreset)
+    : Object.fromEntries(Object.entries(selection?.personas ?? {}).filter(([, n]) => listPresets().includes(n)).map(([g, n]) => [g, loadPreset(n)]));
   if (interactive) {
     const { listPlaybooks } = await import("../engine/lib/playbooks.ts");
     const prev = process.env.CREW_PLAYBOOKS_DIR;
     process.env.CREW_PLAYBOOKS_DIR = resolve(engineDir, "data", "playbooks");
     try { await askPlaybook(listPlaybooks(), engineDir); }
     finally { if (prev === undefined) delete process.env.CREW_PLAYBOOKS_DIR; else process.env.CREW_PLAYBOOKS_DIR = prev; }
+  }
+  if (selection?.playbook) {
+    const { listPlaybooks } = await import("../engine/lib/playbooks.ts");
+    if (listPlaybooks().includes(selection.playbook)) {
+      const dir = resolve(engineDir, "data", "playbooks");
+      mkdirSync(dir, { recursive: true });
+      writeFileSync(resolve(dir, "_default.json"), JSON.stringify({ default: selection.playbook }) + "\n");
+    }
   }
   for (const g of Object.keys(choice)) console.log(`  ${GROUP_LABELS[g]}: ${choice[g]}`);
   if (choice.planning === "mock") console.log("  No supported provider found: roles run in mock mode (install and log in to the claude CLI).");

@@ -1,0 +1,20 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "BMQOS Installer",
+  "version": "0.1.0",
+  "identifier": "io.github.bmqos.installer",
+  "build": { "frontendDist": "./ui" },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [{ "label": "main", "title": "BMQOS Installer", "width": 760, "height": 680, "resizable": true }],
+    "security": { "csp": "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:" }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.png"],
+    "category": "Utility",
+    "shortDescription": "BMQOS installer",
+    "longDescription": "Guided installer for BMQOS: checks Node, git and the claude CLI, installs dependencies, picks AI services, writes .env and starts the stack."
+  }
+}
