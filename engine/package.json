@@ -6,6 +6,8 @@
     "build": "next build",
     "start": "next start -H 0.0.0.0 -p 3800",
     "mcp": "tsx mcp/server.mts",
+    "mcp:http": "tsx mcp/server.mts --http",
+    "mcp:pack": "esbuild mcp/server.mts --bundle --platform=node --format=esm --outfile=dist-mcpb/server.mjs --banner:js=\"import{createRequire}from'module';const require=createRequire(import.meta.url);\" && cp mcp/manifest.json dist-mcpb/manifest.json && npx --yes @anthropic-ai/mcpb pack dist-mcpb crew-engine.mcpb",
     "test:mcp": "tsx scripts/mcp-test.mts",
     "test:retro": "tsx scripts/retro-test.mts",
     "test:evals": "tsx scripts/evals-test.mts",
