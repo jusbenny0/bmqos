@@ -40,6 +40,7 @@ export const SECS: Sec[] = [
   { id: "home", n: "Home", ic: "home", r: "overview", routes: ["overview"], hint: "Stats and agent runs" },
   { id: "tasks", n: "Needs you", ic: "work", r: "waiting", routes: ["waiting", "flow", "runs", "agents", "tasks-hermes", "tasks-done", "tasks-snooze"], hint: "What's waiting on your decision" },
   { id: "goals", n: "Goals", ic: "grow", r: "crew-tasks", routes: ["crew-tasks"], hint: "Big goals and their progress" },
+  { id: "brand", n: "Brand", ic: "docs", r: "brand", routes: ["brand"], hint: "Logo, colors, tone and images" },
   { id: "ideas", n: "Ideas", ic: "grow", r: "crew-ideas", routes: ["crew-ideas"], hint: "Rough idea → team discussion → tasks" },
   { id: "crew", n: "Team", ic: "crew", r: "crew-team", routes: ["crew-team", "crew-brain"], hint: "Agents and their instructions" },
   { id: "usage", n: "Spend", ic: "cost", r: "crew-usage", routes: ["crew-usage"], hint: "How much the company costs" },
@@ -48,7 +49,7 @@ export const SECS: Sec[] = [
   { id: "srv", n: "Machines", ic: "disk", r: "servers", routes: ["servers"], hint: "Servers and disks" },
 ];
 export const secOf = (r: string): Sec | undefined => SECS.find((s) => s.routes.includes(r));
-export const where = (r: string): string => ({ overview: "Home", waiting: "Tasks · Needs you", flow: "Tasks · Running", "tasks-hermes": "Tasks · Assistant decided", "tasks-done": "Tasks · Done", "tasks-snooze": "Tasks · Snoozed", runs: "Tasks · Runs", agents: "Tasks · Agents", projects: "Projects", project: "Projects · Project", docs: "Projects · Documents", social: "Projects · Social", ops: "Operations · Services", servers: "Operations · Machines", "crew-team": "Company · Team", "crew-tasks": "Company · Tasks", "crew-usage": "Company · Usage", "crew-ideas": "Company · Ideas", "crew-brain": "Company · Brain" } as Record<string, string>)[r] ?? "BMQOS";
+export const where = (r: string): string => ({ overview: "Home", waiting: "Tasks · Needs you", flow: "Tasks · Running", "tasks-hermes": "Tasks · Assistant decided", "tasks-done": "Tasks · Done", "tasks-snooze": "Tasks · Snoozed", runs: "Tasks · Runs", agents: "Tasks · Agents", projects: "Projects", project: "Projects · Project", docs: "Projects · Documents", social: "Projects · Social", ops: "Operations · Services", servers: "Operations · Machines", "crew-team": "Company · Team", "crew-tasks": "Company · Tasks", "crew-usage": "Company · Usage", "crew-ideas": "Company · Ideas", brand: "Projects · Brand", "crew-brain": "Company · Brain" } as Record<string, string>)[r] ?? "BMQOS";
 
 /* uniform badges: amber number = needs you, red = needs attention, lime dot = running; zero is never drawn */
 interface Badges { [id: string]: { n: number; c: "amber" | "red" } | undefined }

@@ -15,6 +15,7 @@ import { docsHTML, type DocsData } from "./mod/docs";
 import { projectsHTML, projectHTML, type ProjData } from "./mod/projects";
 import { itemsHTML, TAB_OF, type ItemsData, type TaskUi } from "./mod/items";
 import { ideasHTML } from "./mod/ideas";
+import { brandHTML } from "./mod/brand";
 import { crewTeamHTML, crewMemberSheet, crewTasksHTML, crewTaskSheet, crewUsageHTML, crewBrainHTML, crewNodeSheet, type CrewTeamUi, type CrewTasksUi, type CrewUsageUi, type CrewTxUi, type CrewSendSt } from "./mod/crew";
 import type { TaskDetail as CrewTaskDetail, BrainNode, BrainHit } from "@/lib/crew";
 
@@ -186,6 +187,7 @@ export const shell = (d: Snapshot, r: Route, compact: boolean, stale: string | n
     : r.s === "crew-team" ? crewTeamHTML(ex.crewTeam)
     : r.s === "crew-tasks" ? crewTasksHTML(ex.crewTasks, ex.crewTeam?.list ?? null, r.q.agent ?? "", compact)
     : r.s === "crew-ideas" ? ideasHTML()
+    : r.s === "brand" ? brandHTML()
     : r.s === "crew-usage" ? crewUsageHTML(ex.crewUsage, r.q.range === "7d" ? "7d" : "24h", compact)
     : r.s === "crew-brain" ? crewBrainHTML(r.q.q ?? "", ex.crewBrainHits)
     : home(d, ex.post ? ex.soc : 0, hot, ex.ix);

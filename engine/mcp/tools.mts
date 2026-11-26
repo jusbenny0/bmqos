@@ -16,6 +16,21 @@ async function api(method: string, path: string, body?: unknown): Promise<unknow
   return text ? JSON.parse(text) : null;
 }
 
+// Brand lives in the panel (not the engine): BRAND_URL (default http://localhost:3000) + OS_BRAND_TOKEN (same value as in the panel .env).
+const panelBase = () => (process.env.BRAND_URL ?? "http://localhost:3000").replace(/\/$/, "");
+async function panel(method: string, path: string, body?: unknown): Promise<unknown> {
+  const res = await fetch(panelBase() + path, {
+    method,
+    headers: { Authorization: `Bearer ${process.env.OS_BRAND_TOKEN ?? ""}`, ...(body instanceof FormData ? {} : { "Content-Type": "application/json" }) },
+    body: body === undefined ? undefined : body instanceof FormData ? body : JSON.stringify(body),
+  });
+  const text = await res.text();
+  if (!res.ok) throw new Error(`${method} ${path} → ${res.status} ${text.slice(0, 300)}`);
+  return text ? JSON.parse(text) : null;
+}
+type BAsset = { id: number; project: string; gen: number; format: string; w: number; h: number; status: string; error: string | null; starred: boolean; png_url: string | null; created: string };
+const bout = (a: BAsset) => ({ id: a.id, format: a.format, status: a.status, ...(a.error ? { error: a.error } : {}), ...(a.png_url ? { png_url: panelBase() + a.png_url } : {}) });
+
 const cap = (s: string) => (s.length > 6000 ? s.slice(0, 6000) + `…[truncated ${s.length - 6000} chars]` : s);
 type Task = { id: number; title: string; status: string; owner_id: number | null; pr_url: string | null; handoff_note?: string };
 const brief = (t: Task) => ({ id: t.id, title: t.title, status: t.status, owner_id: t.owner_id, pr_url: t.pr_url });
@@ -132,6 +147,52 @@ server.registerTool("approve_idea", {
   description: "Approve a discussed idea: creates the proposed tasks. answers = optional replacements for the recommended answers, by question order.",
   inputSchema: { id: z.number().int(), answers: z.array(z.string()).optional() },
 }, ({ id, answers }) => out(api("POST", `/api/ideas/${id}/approve`, { answers })));
+
+server.registerTool("create_brand_project", {
+  description: "Brand module: create a brand project (kit: colors, fonts, voice, optional logo). Colors are hex roles bg/ink/accent/muted; logo_path (local SVG/PNG file) or logo_url is uploaded as the primary logo. Returns {id, url}.",
+  inputSchema: {
+    name: z.string(),
+    colors: z.object({ bg: z.string(), ink: z.string(), accent: z.string(), accent2: z.string().optional(), muted: z.string() }).partial().optional(),
+    fonts: z.object({ display: z.string().optional(), body: z.string().optional() }).optional(),
+    voice: z.object({ tags: z.array(z.string()).optional(), never: z.array(z.string()).optional(), samples: z.array(z.string()).optional() }).optional(),
+    logo_path: z.string().optional(), logo_url: z.string().optional(),
+  },
+}, ({ name, colors, fonts, voice, logo_path, logo_url }) => out((async () => {
+  const kit = { colors, voice, fonts: fonts && { ...(fonts.display ? { display: { family: fonts.display } } : {}), ...(fonts.body ? { body: { family: fonts.body } } : {}) } };
+  const p = (await panel("POST", "/api/brand", { name, kit })) as { id: string; url: string };
+  let logo: Buffer | null = null;
+  if (logo_path) logo = (await import("node:fs")).readFileSync(logo_path);
+  else if (logo_url) logo = Buffer.from(await (await fetch(logo_url)).arrayBuffer());
+  if (logo) {
+    const f = new FormData();
+    f.set("kind", "logo-primary");
+    f.set("file", new Blob([new Uint8Array(logo)]));
+    await panel("POST", `/api/brand/${p.id}/files`, f);
+  }
+  return { id: p.id, url: panelBase() + p.url };
+})()));
+
+server.registerTool("generate_brand_images", {
+  description: "Brand module: generate n variations (1-6, default 3) of a brand image (post 1080x1080, story 1080x1920, og 1200x630, banner 1500x500) as PNG. Claude designs HTML from the brand kit, headless Chromium renders it. Waits up to 120 s for done, then returns still-queued ids (poll list_brand_assets). Output has image URLs in the panel, never image data.",
+  inputSchema: { project: z.string(), format: z.enum(["post", "story", "og", "banner"]), brief: z.object({ headline: z.string(), sub: z.string().optional(), cta: z.string().optional() }), n: z.number().int().min(1).max(6).default(3) },
+}, ({ project, format, brief, n }) => out((async () => {
+  const g = (await panel("POST", `/api/brand/${project}/generate`, { format, brief, n })) as { gen: number; assets: BAsset[] };
+  let assets = g.assets;
+  for (let i = 0; i < 80 && assets.some((a) => !["done", "failed"].includes(a.status)); i++) {
+    await new Promise((r) => setTimeout(r, 1500));
+    assets = (await panel("GET", `/api/brand/${project}/assets?gen=${g.gen}`)) as BAsset[];
+  }
+  return { gen: g.gen, assets: assets.map(bout) };
+})()));
+
+server.registerTool("list_brand_assets", {
+  description: "Brand module: list generated images of a project (id, format, size, starred, png_url, created).",
+  inputSchema: { project: z.string(), format: z.enum(["post", "story", "og", "banner"]).optional(), starred: z.boolean().optional(), limit: z.number().int().min(1).max(100).default(30) },
+}, ({ project, format, starred, limit }) => out((async () => {
+  const q = new URLSearchParams({ ...(format ? { format } : {}), ...(starred ? { starred: "1" } : {}) });
+  const a = (await panel("GET", `/api/brand/${project}/assets?${q}`)) as BAsset[];
+  return a.slice(0, limit).map((x) => ({ id: x.id, format: x.format, w: x.w, h: x.h, starred: x.starred, status: x.status, png_url: x.png_url ? panelBase() + x.png_url : null, created: x.created }));
+})()));
 
 return server;
 }
