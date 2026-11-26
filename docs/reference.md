@@ -106,6 +106,10 @@ All requests to API endpoints require appropriate authentication (`Authorization
   - Triggers immediate evaluation of pending retro submissions.
 - **`POST /api/advisors/:slug/ask`**
   - Queries an air-gapped advisor mentor backed by `data/advisors/:slug/kb/`.
+- **`GET /api/playbooks`**, **`PATCH /api/playbooks`** (`{"default": "<id>"|null}`)
+  - Lists playbooks / sets the default. See the [Playbooks guide](playbooks.md).
+- **`GET /api/playbooks/:id`**, **`PATCH /api/playbooks/:id`**
+  - Returns a playbook plus its `brief` text / saves a partial override (`{"reset": true}` removes it).
 
 ---
 

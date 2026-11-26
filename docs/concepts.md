@@ -146,12 +146,16 @@ BMQOS supports a pluggable, multi-model substrate:
 
 ---
 
-## 9. Playbooks (Planned Concept)
+## 9. Playbooks
 
-> [!NOTE]
-> **Playbooks** represent the planned standard operating procedure (SOP) engine scheduled for milestone **B1**.
+A **playbook** is a reusable recipe for a task type: step-by-step roles, gates and acceptance criteria, a **SECURITY RULES** checklist for the Security role, and **TECH STACK DEFAULTS**. Built-in playbooks live in `engine/playbooks/` (`<id>.json` is the machine form, `<id>.md` the readable one):
 
-While individual tasks coordinate ad-hoc work, **Playbooks** will provide reusable, multi-step orchestration workflows:
-- **Defined Sequences:** Multi-stage recipes (e.g., *New Microservice Scaffolding*, *Security Patch Release*, *Full-App Dependency Upgrade*).
-- **Automated Handoffs:** Declarative dependencies between planning, design, implementation, and multi-stage verification.
-- **Execution Policies:** Role constraints, timeout rules, and required gate profiles pre-packaged into executable templates.
+| Id | Use for | Gates |
+| :--- | :--- | :--- |
+| `web-landing` | Landing / marketing pages (art direction → spec → build → Visual gate ≥ 8.5 at 1440/390 → QA, anti-slop rules) | visual, qa |
+| `web-app` | Authenticated web products | visual, qa, security |
+| `api` | Backend services (Node/Hono + Postgres/Drizzle) | security |
+| `docs` | Documentation-only changes | review |
+
+When the CEO creates a task it picks a playbook, fetches it with `GET /api/playbooks/<id>` and pastes the `brief` text (steps, security rules, stack) into the task brief, setting `needs_visual` / `needs_qa` / `needs_security` from the playbook. See the [Playbooks guide](playbooks.md) for overrides and the API.
+

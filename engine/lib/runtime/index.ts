@@ -5,6 +5,7 @@ import {
   AGY_CONTEXT_WINDOW, BLOCKED_MODEL, CEO_CWD, COMPACT_AT_BY_ROLE, COMPACT_AT_TOKENS, COMPACT_AT_DEFAULT, CONTEXT_WINDOW, CREW_TOKEN, CREW_URL,
   BASE_BRANCH, MAX_RETURNS, MAX_TURNS_BY_ROLE, MAX_TURNS_DEFAULT, RESET_AT_TOKENS_BY_ROLE, TIMEOUT_MS, personaOf, useMock, withPersona,
 } from "@/lib/config";
+import { playbookCatalog } from "@/lib/playbooks";
 import { RETRO_HINT, captureRetro } from "@/lib/retro";
 import { collectEvidence, stopPreview } from "@/lib/evidence";
 
@@ -31,6 +32,7 @@ Team: ${roster}. ${junior ? `${junior} (junior, cheapest engine) is the cheapest
    needs_visual=1 for tasks that change the UI (1440/390 screenshots against the style). needs_qa=1 for UI tasks that should also go through QA.
    needs_security=1 for tasks touching auth/session, secrets/env, payments, public API endpoints, file upload, dependencies or infra/deploy (an automatic no-LLM scan also runs on every task with code).
 2) POST /api/delegate {to, taskId, text=brief} - then it runs by itself (builder/junior -> reviewer -> [Security if needs_security/scan] -> [Visual if needs_visual] -> [QA if needs_qa] -> done); step in only on "blocked" (includes escalation from Visual after ${MAX_RETURNS} returned rounds and junior failures).
+${playbookCatalog()}
 Reply to the user briefly: plan (tasks + who) + at most 1-3 closed questions.
 IMPORTANT: write curl commands with the URL and token written DIRECTLY (no $CREW_URL/$CREW_TOKEN variables - they cannot be expanded in your environment and such a Bash command is rejected). Exactly like this:
 curl -s -X POST "${url}/api/tasks" -H "X-Crew-Token: ${token}" -H "Content-Type: application/json" -d '{"title":"...","brief":"...","needs_qa":false,"needs_visual":false,"needs_security":false}'

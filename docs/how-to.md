@@ -81,52 +81,13 @@ curl -s -X PATCH "http://127.0.0.1:3800/api/employees/3" \
 
 ## 2. How to Author a Custom Playbook (SOP Workflow)
 
-> [!NOTE]
-> The automated playbook execution engine is scheduled for milestone **B1**. Today, operators define standard operating procedures (SOPs) as structured task templates dispatched through the task queue.
+Override a built-in playbook or add your own without touching `engine/playbooks/`: send a (partial) definition with `PATCH /api/playbooks/<id>`, or drop `<id>.json` into `engine/data/playbooks/`. Details, the JSON shape and the API are in the [Playbooks guide](playbooks.md).
 
-### Defining an SOP Workflow Template
-
-To create a reproducible procedure for common tasks (e.g., *Feature Implementation with Visual & Security Gates*):
-
-1. **Document the SOP structure** in your company Brain (`brain/playbooks/feature-workflow.md`):
-
-   ```markdown
-   # Playbook: New Feature Workflow
-
-   ## 1. Specification (CEO)
-   - Define user story and acceptance criteria.
-   - Set token cap (S: 300k, M: 800k).
-   - Determine required gates (`needs_security`, `needs_visual`, `needs_qa`).
-
-   ## 2. Implementation (Builder)
-   - Work in isolated branch: `git checkout -b agent/<feature-name> origin/main`.
-   - Write unit tests alongside implementation.
-   - Run typecheck and tests: `npm run typecheck && npm test`.
-   - Commit, push, and create PR: `gh pr create --base main`.
-
-   ## 3. Verification Pipeline (Gates)
-   - Gate 1: Code Review (`reviewer`) -> verifies logic and diff.
-   - Gate 2: Security Review (`security`) -> checks auth, inputs, secrets.
-   - Gate 3: Visual Review (`visual`) -> inspects 1440px and 390px screenshots.
-   - Gate 4: QA (`qa`) -> confirms end-to-end journey.
-   ```
-
-2. **Dispatch the Task via API**:
-   Submit the playbook-defined task directly to the engine:
-
-   ```bash
-   curl -s -X POST "http://127.0.0.1:3800/api/tasks" \
-     -H "Authorization: Bearer $CREW_API_TOKEN" \
-     -H "Content-Type: application/json" \
-     -d '{
-       "title": "Implement Webhook Verification",
-       "brief": "Follow Playbook: Feature Workflow.\nAcceptance: HMAC signature check, tests passing.\nScope: app/api/webhooks/ only.\nSize: S",
-       "needs_security": 1,
-       "needs_visual": 0,
-       "needs_qa": 0,
-       "token_cap": 300000
-     }'
-   ```
+```bash
+curl -s -X PATCH "http://127.0.0.1:3800/api/playbooks/api" \
+  -H "Authorization: Bearer $CREW_API_TOKEN" -H "Content-Type: application/json" \
+  -d '{"tech_stack": ["Node 24 + TypeScript", "Fastify", "SQLite"]}'
+```
 
 ---
 

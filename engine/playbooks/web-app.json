@@ -1,0 +1,70 @@
+{
+  "id": "web-app",
+  "title": "Web application",
+  "description": "Authenticated product UI with data, forms and a backend.",
+  "needs": {
+    "visual": true,
+    "qa": true,
+    "security": true
+  },
+  "steps": [
+    {
+      "role": "ceo",
+      "title": "Brief",
+      "acceptance": "User stories, data model sketch, roles/permissions, out-of-scope list and repo are in the brief."
+    },
+    {
+      "role": "designer-builder",
+      "title": "UX spec",
+      "acceptance": "Screens and states (empty, loading, error, success) at 1440 and 390; component list reusing the existing design system."
+    },
+    {
+      "role": "builder",
+      "title": "Build",
+      "acceptance": "Feature implemented with typed API boundaries, migrations, and tests for business logic."
+    },
+    {
+      "role": "reviewer",
+      "title": "Code review",
+      "gate": "review",
+      "acceptance": "Diff within scope; input validated at boundaries; no `any`; migrations reversible."
+    },
+    {
+      "role": "security",
+      "title": "Security gate",
+      "gate": "security",
+      "acceptance": "Every item of SECURITY RULES checked and reported pass/fail with file references."
+    },
+    {
+      "role": "visual",
+      "title": "Visual gate",
+      "gate": "visual",
+      "acceptance": "Screenshots at 1440 and 390 score >= 8/10; all four states exist."
+    },
+    {
+      "role": "qa",
+      "title": "QA",
+      "gate": "qa",
+      "acceptance": "Playwright flow covers the main user story plus one failure path; no console errors."
+    }
+  ],
+  "security_rules": [
+    "No secrets, tokens or `.env` content in code, commits, logs or screenshots.",
+    "Dependencies: pin versions, run the audit (`npm audit --omit=dev`), no new package without a stated reason.",
+    "Authentication on every route and server action; authorisation checked per resource (no IDOR).",
+    "Sessions: httpOnly, Secure, SameSite cookies; CSRF protection for state-changing requests.",
+    "All input validated server-side with a schema (e.g. zod); output encoded; no raw SQL string building.",
+    "Passwords hashed with scrypt/argon2; no custom crypto.",
+    "File upload: type and size limits, random file names, stored outside the web root.",
+    "Rate limit login and public endpoints; generic error messages (no stack traces to the client).",
+    "Secrets only from environment; nothing sensitive in client bundles or logs."
+  ],
+  "tech_stack": [
+    "Next.js 16 (App Router, Server Actions) + TypeScript strict",
+    "Tailwind CSS 4",
+    "Postgres + Drizzle ORM with versioned migrations",
+    "zod for validation",
+    "Playwright for end-to-end tests",
+    "GSAP/Lenis only for polish, never required for function"
+  ]
+}

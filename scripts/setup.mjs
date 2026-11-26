@@ -408,6 +408,19 @@ async function askPersonas(presets, loadPreset) {
   return out;
 }
 
+// Default playbook for new tasks (data/playbooks/_default.json); Enter keeps none. Overrides live next to it.
+async function askPlaybook(ids, engineDir) {
+  if (!ids.length) return;
+  const rl = readline.createInterface({ input, output });
+  const a = (await rl.question(`\nDefault playbook for new tasks? [${ids.join("/")}/none]: `)).trim();
+  rl.close();
+  if (!ids.includes(a)) return;
+  const dir = resolve(engineDir, "data", "playbooks");
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(resolve(dir, "_default.json"), JSON.stringify({ default: a }) + "\n");
+  console.log(`  Default playbook: ${a} (change later via PATCH /api/playbooks)`);
+}
+
 // Detect AI services, let the user pick one per role group (or take the best with interactive=false), write engine roles.
 export async function runProviderSetup({ interactive = false, engineDir = ENGINE_DIR, detectOpts } = {}) {
   const P = await import("../engine/lib/providers.ts");
@@ -430,6 +443,13 @@ export async function runProviderSetup({ interactive = false, engineDir = ENGINE
     rl.close();
   }
   const personas = interactive ? await askPersonas(listPresets(), loadPreset) : {};
+  if (interactive) {
+    const { listPlaybooks } = await import("../engine/lib/playbooks.ts");
+    const prev = process.env.CREW_PLAYBOOKS_DIR;
+    process.env.CREW_PLAYBOOKS_DIR = resolve(engineDir, "data", "playbooks");
+    try { await askPlaybook(listPlaybooks(), engineDir); }
+    finally { if (prev === undefined) delete process.env.CREW_PLAYBOOKS_DIR; else process.env.CREW_PLAYBOOKS_DIR = prev; }
+  }
   for (const g of Object.keys(choice)) console.log(`  ${GROUP_LABELS[g]}: ${choice[g]}`);
   if (choice.planning === "mock") console.log("  No supported provider found: roles run in mock mode (install and log in to the claude CLI).");
   const file = P.write(engineDir, P.buildRoles(DEFAULT_TEAM, choice).map((r) => {

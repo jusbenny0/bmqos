@@ -1,0 +1,41 @@
+{
+  "id": "docs",
+  "title": "Documentation",
+  "description": "Docs, guides and READMEs; no product code changes.",
+  "needs": {
+    "visual": false,
+    "qa": false,
+    "security": false
+  },
+  "steps": [
+    {
+      "role": "ceo",
+      "title": "Brief",
+      "acceptance": "Audience, pages to write or change, source of truth (code, issues) and repo are in the brief."
+    },
+    {
+      "role": "builder",
+      "title": "Write",
+      "acceptance": "Pages written from the code and real commands; every command was executed or marked as untested."
+    },
+    {
+      "role": "reviewer",
+      "title": "Review",
+      "gate": "review",
+      "acceptance": "Only documentation files changed; links resolve; examples match current code; no marketing filler."
+    }
+  ],
+  "security_rules": [
+    "No secrets, tokens or `.env` content in code, commits, logs or screenshots.",
+    "Dependencies: pin versions, run the audit (`npm audit --omit=dev`), no new package without a stated reason.",
+    "Documentation-only: the diff must not touch source code, CI or config.",
+    "No real tokens, hostnames, emails or customer data in examples; use obvious placeholders.",
+    "Do not document insecure shortcuts (disabled auth, `--no-verify`) as recommended practice."
+  ],
+  "tech_stack": [
+    "Markdown in `docs/` (GitHub-flavoured)",
+    "Short pages, one topic each, linked from `docs/README.md`",
+    "Code blocks tagged with a language; commands copy-pastable",
+    "Playwright only if screenshots are required"
+  ]
+}

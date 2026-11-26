@@ -1,0 +1,64 @@
+{
+  "id": "api",
+  "title": "HTTP API / backend service",
+  "description": "Backend service or public API without a UI.",
+  "needs": {
+    "visual": false,
+    "qa": false,
+    "security": true
+  },
+  "steps": [
+    {
+      "role": "ceo",
+      "title": "Brief",
+      "acceptance": "Endpoints or events, request/response shapes, auth model, error format, limits and repo are in the brief."
+    },
+    {
+      "role": "builder",
+      "title": "Contract",
+      "acceptance": "OpenAPI or typed route definitions written first and agreed in the task."
+    },
+    {
+      "role": "builder",
+      "title": "Build",
+      "acceptance": "Implementation matches the contract; Drizzle migrations; integration tests against a real Postgres."
+    },
+    {
+      "role": "reviewer",
+      "title": "Code review",
+      "gate": "review",
+      "acceptance": "Diff within scope; consistent error format; no `any`; idempotency where the contract says so."
+    },
+    {
+      "role": "security",
+      "title": "Security gate",
+      "gate": "security",
+      "acceptance": "Every item of SECURITY RULES checked and reported pass/fail with file references."
+    },
+    {
+      "role": "qa",
+      "title": "Contract tests",
+      "gate": "qa",
+      "acceptance": "Tests exercise success, validation error, unauthenticated and forbidden cases for each endpoint."
+    }
+  ],
+  "security_rules": [
+    "No secrets, tokens or `.env` content in code, commits, logs or screenshots.",
+    "Dependencies: pin versions, run the audit (`npm audit --omit=dev`), no new package without a stated reason.",
+    "Every endpoint authenticated unless explicitly listed as public; authorisation checked per resource.",
+    "Validate body, query and params with schemas; reject unknown fields; size limits on bodies.",
+    "Parametrised queries only (Drizzle); no string-built SQL.",
+    "Rate limiting and request timeouts; pagination caps on list endpoints.",
+    "CORS allow-list, not `*`, for credentialed requests.",
+    "Errors return a stable JSON shape without stack traces or internal ids; log with request id, never with secrets or PII.",
+    "Webhooks verify signatures with constant-time comparison; tokens compared in constant time."
+  ],
+  "tech_stack": [
+    "Node 24 + TypeScript strict",
+    "Hono (HTTP framework)",
+    "Postgres + Drizzle ORM with versioned migrations",
+    "zod for validation (e.g. @hono/zod-validator)",
+    "node:test or Vitest for unit/integration tests",
+    "Playwright (APIRequestContext) for end-to-end API checks"
+  ]
+}

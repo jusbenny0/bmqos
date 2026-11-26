@@ -28,6 +28,7 @@ For specialized architectural and operational details:
 - [**Configuration Reference**](config.md) — Complete environment variable specification for the BMQOS control panel.
 - [**Crew Module Integration**](crew.md) — Task lifecycles, kanban queues, and company Brain integration.
 - [**Advisors Guide**](advisors.md) — Setting up domain mentors backed by private knowledge bases.
+- [**Playbooks Guide**](playbooks.md) — Task-type recipes (landing, web app, API, docs), overrides and the playbooks API.
 
 ---
 

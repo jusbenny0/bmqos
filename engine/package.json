@@ -12,6 +12,7 @@
     "eval": "tsx scripts/eval.mts",
     "test:persona": "tsx scripts/persona-test.mts",
     "test:advisors": "tsx scripts/advisors-test.mts",
+    "test:playbooks": "tsx scripts/playbooks-test.mts",
     "typecheck": "tsc --noEmit",
     "start:all": "node scripts/start-all.mjs"
   },

@@ -23,6 +23,8 @@ export async function middleware(req: NextRequest) {
     if (same(req.headers.get("x-crew-token") ?? "", process.env.CREW_TOKEN ?? "")) return NextResponse.next();
   }
 
+  if (req.method === "GET" && pathname.startsWith("/api/playbooks") && same(req.headers.get("x-crew-token") ?? "", process.env.CREW_TOKEN ?? "")) return NextResponse.next();
+
   const expected = await checkSession(req.cookies.get(COOKIE)?.value);
   if (expected) return NextResponse.next();
 
