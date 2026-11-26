@@ -186,11 +186,16 @@ Review our full security practices in [docs/security.md](docs/security.md) and r
 
 ## Documentation
 
-- [Installation & Setup](docs/install.md) — Detailed guide for local, server, Docker, and desktop deployments.
-- [Configuration Reference](docs/config.md) — Full reference for all environment variables.
-- [Architecture & Design](docs/architecture.md) — Internal system design and integration model.
-- [Security Architecture](docs/security.md) — Threat model, authentication, and guard tiers.
-- [Workforce Module Integration](docs/crew.md) — Orchestrating agent workforces, tasks, and company knowledge.
+Explore the complete [**Documentation Hub**](docs/README.md):
+
+- [**Getting Started (5 min)**](docs/getting-started.md) — 5-minute quickstart from zero to running panel + engine.
+- [**Core Concepts**](docs/concepts.md) — Company model, roles, quality gates, retrospectives, evidence, personas, advisors, providers, and playbooks.
+- [**How-To Guides**](docs/how-to.md) — Custom roles, playbook SOPs, and Claude Desktop MCP setup.
+- [**Technical Reference**](docs/reference.md) — Complete environment variables, REST/SSE APIs, and CLI commands.
+- [**Troubleshooting**](docs/troubleshooting.md) — Port conflicts, database locks, CLI login, and Chromium evidence fixes.
+- [**Frequently Asked Questions (FAQ)**](docs/faq.md) — Demo mode vs live, costs & token caps, safety model, and hosting.
+- [**System Architecture**](docs/architecture.md) — Internal system design and integration model.
+- [**Security Architecture**](docs/security.md) — Threat model, authentication, and guard tiers.
 
 ---
 

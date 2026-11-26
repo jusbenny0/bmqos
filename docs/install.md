@@ -68,7 +68,7 @@ npm run setup -- --yes \
   --owner="Chief Operator"
 ```
 
-Refer to [docs/setup.md](docs/setup.md) for full argument reference.
+Refer to [setup.md](setup.md) for full argument reference.
 
 ---
 

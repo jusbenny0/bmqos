@@ -59,7 +59,7 @@ BMQOS is configured using environment variables loaded from `.env` in the reposi
 | `CREW_API_URL` | Base URL of the workforce orchestrator service providing team telemetry, tasks, and the Brain knowledge base. | `""` (Demo mode) | `https://crew.example.com` |
 | `CREW_API_TOKEN` | Authentication token for workforce API requests. Sent in the `Authorization: Bearer <token>` header. | `""` | `<your-token>` |
 
-See [docs/crew.md](docs/crew.md) for full workforce module details.
+See [crew.md](crew.md) for full workforce module details.
 
 ---
 
@@ -138,7 +138,7 @@ See [docs/crew.md](docs/crew.md) for full workforce module details.
 | `PVE_API_URL` | Infrastructure API endpoint for VM/node telemetry. | `""` | `https://infra.example.com/api` |
 | `PVE_NODE` | Target infrastructure node name. | `""` | `node-01` |
 | `PVE_TOKEN` | Infrastructure API token. | `""` | `<token-id>` |
-| `OS_SERVERS` | Monitored server list (JSON array or comma-separated list). | `""` | `[{"name":"node1","ip":"10.0.0.1"}]` |
+| `OS_SERVERS` | Monitored server list (JSON array or comma-separated list). | `""` | `[{"name":"node1","ip":"192.0.2.1"}]` |
 | `OS_NETMAP_STATIC` | Static network topology definition in JSON format. | `""` | `{"nodes":[],"links":[]}` |
 | `OS_SVC_TTL_MS` | Service health polling cache TTL in milliseconds. | `60000` | `30000` |
 | `OS_USD_PER_MTOK` | Estimated LLM token cost in USD per 1M tokens for spend calculations. | `""` | `15.00` |
