@@ -24,9 +24,9 @@ assert.equal(fs.readFileSync(path.join(kb, "INDEX.md"), "utf8"), "custom", "exis
 const p = advisorPrompt("m");
 assert.match(p, /Never claim or imply to be a real person/);
 assert.match(p, /kb\/INDEX\.md first/);
-const a = advisorArgs("/srv/x/data/advisors/m", "q?");
+const a = advisorArgs("/opt/app/data/advisors/m", "q?");
 const allowed = a[a.indexOf("--allowedTools") + 1];
-assert.equal(allowed, "Read(//srv/x/data/advisors/m/**),Glob(//srv/x/data/advisors/m/**),Grep(//srv/x/data/advisors/m/**)", "tools scoped to the advisor folder");
+assert.equal(allowed, "Read(//opt/app/data/advisors/m/**),Glob(//opt/app/data/advisors/m/**),Grep(//opt/app/data/advisors/m/**)", "tools scoped to the advisor folder");
 assert.ok(!allowed.split(",").includes("Read"), "no unscoped Read");
 assert.match(a[a.indexOf("--disallowedTools") + 1], /Bash.*Write.*WebFetch/);
 assert.deepEqual(listPresets().filter((x) => x.startsWith("advisor-")), [], "template is not a persona preset");
