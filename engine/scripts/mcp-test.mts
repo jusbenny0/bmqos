@@ -33,7 +33,7 @@ const text = (r: unknown) => (r as { content: { text: string }[] }).content[0].t
 
 const c = await run("t0k");
 const names = (await c.listTools()).tools.map((t) => t.name).sort();
-assert.deepEqual(names, ["answer", "approve", "blocked_overview", "give_task", "list_evals", "list_providers", "list_tasks", "retro_summary", "retry_task", "return_task", "run_evals", "set_compact_tokens", "spend_summary", "task_status", "team_status"]);
+assert.deepEqual(names, ["answer", "approve", "approve_idea", "blocked_overview", "discuss_idea", "give_task", "list_evals", "list_providers", "list_tasks", "retro_summary", "retry_task", "return_task", "run_evals", "set_compact_tokens", "spend_summary", "task_status", "team_status"]);
 await c.callTool({ name: "give_task", arguments: { title: "T", brief: "B" } });
 assert.equal(JSON.parse(text(await c.callTool({ name: "list_tasks", arguments: { status: "done" } }))).length, 1);
 await c.callTool({ name: "task_status", arguments: { id: 5 } });
@@ -49,6 +49,8 @@ await c.callTool({ name: "list_evals", arguments: {} });
 await c.callTool({ name: "run_evals", arguments: { role: "qa" } });
 assert.match(text(await c.callTool({ name: "retro_summary", arguments: {} })), /latest/);
 assert.match(text(await c.callTool({ name: "set_compact_tokens", arguments: {} })), /compact_at_tokens/);
+await c.callTool({ name: "approve_idea", arguments: { id: 3, answers: ["x"] } });
+assert.ok(seen.some((l) => l.startsWith("POST /api/ideas/3/approve ")), "approve_idea hits the ideas API");
 const joined = seen.join("\n");
 for (const s of ['POST /api/tasks Bearer t0k {"title":"T"', "GET /api/tasks/5", 'PATCH /api/tasks/5 Bearer t0k {"status":"done"}', 'POST /api/chat Bearer t0k {"text":"ano"}', 'POST /api/team/3/message Bearer t0k {"text":"ano","taskId":5}', "GET /api/team ", "GET /api/usage?range=7d", 'PATCH /api/tasks/7 Bearer t0k {"status":"todo"}', 'POST /api/team/3/message Bearer t0k {"text":"fix it","taskId":7}', 'POST /api/evals Bearer t0k {"role":"qa"}'])
   assert.ok(joined.includes(s), `missing: ${s}\n${joined}`);

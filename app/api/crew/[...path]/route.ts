@@ -30,6 +30,8 @@ export async function GET(req: Request, ctx: { params: Promise<{ path: string[] 
       data = await crew.usage(r);
     } else if (path.length === 3 && path[0] === "team" && path[2] === "transcript" && id !== null) data = await crew.transcript(id, num(q.get("after")) ?? 0);
     else if (path.length === 3 && path[0] === "team" && path[2] === "instructions" && id !== null) data = await crew.instructions(id);
+    else if (path.length === 1 && path[0] === "ideas") data = await crew.ideas();
+    else if (path.length === 2 && path[0] === "ideas" && id !== null) data = await crew.idea(id);
     else if (path[0] === "brain" && path[1] === "search") data = await crew.brainSearch(q.get("q") ?? "");
     else if (path[0] === "brain" && path[1] === "node" && path.length > 2) data = await crew.brainNode(path.slice(2).join("/"));
     else if (path.length === 2 && path[0] === "brain" && path[1] === "graph") data = await crew.brainGraph();
@@ -42,13 +44,25 @@ export async function GET(req: Request, ctx: { params: Promise<{ path: string[] 
 export async function POST(req: Request, ctx: { params: Promise<{ path: string[] }> }) {
   const { path } = await ctx.params;
   const id = num(path[1]);
-  const b = (await req.json().catch(() => ({}))) as { text?: unknown; taskId?: unknown };
+  const b = (await req.json().catch(() => ({}))) as { text?: unknown; taskId?: unknown; answers?: unknown };
+  if (path[0] === "ideas" && id !== null && path.length === 3 && path[2] === "approve") {
+    const answers = Array.isArray(b.answers) ? b.answers.map((a) => String(a).slice(0, 300)) : [];
+    try {
+      const r = await guarded(req, "chat.send", `ideas/${id}`, {}, {}, () => crew.approveIdea(id, answers));
+      return r instanceof NextResponse ? r : NextResponse.json(r);
+    } catch (e) { return out(e); }
+  }
   const text = typeof b.text === "string" ? b.text.trim() : "";
   if (!text || text.length > 8000) return NextResponse.json({ error: "text" }, { status: 400 });
   try {
     if (path.length === 1 && path[0] === "chat") {
       const r = await guarded(req, "chat.send", "crew/chat", {}, {}, () => crew.chat(text));
       return r instanceof NextResponse ? r : NextResponse.json(r);
+    }
+    if (path.length === 1 && path[0] === "ideas") {
+      if (text.length > 4000) return NextResponse.json({ error: "text" }, { status: 400 });
+      const r = await guarded(req, "chat.send", "ideas", {}, {}, () => crew.createIdea(text));
+      return r instanceof NextResponse ? r : NextResponse.json(r, { status: 202 });
     }
     if (path.length === 3 && path[0] === "team" && path[2] === "message" && id !== null) {
       const taskId = typeof b.taskId === "number" ? b.taskId : undefined;

@@ -91,7 +91,17 @@ curl -s -X PATCH "http://127.0.0.1:3800/api/playbooks/api" \
 
 ---
 
-## 3. How to Connect Claude Desktop & Claude Code via MCP
+## 3. How to Turn a Rough Idea into Tasks (Ideas)
+
+Write a rough idea and let the team discuss it before any work starts.
+
+1. Open **Ideas** in the panel and describe the idea, or call the MCP tool `discuss_idea` (`text`), or `POST /api/ideas` with `{"text": "..."}`.
+2. The engine runs one short round: Designer, Builder and Security (and the Advisor, if you have one) each give an opinion and the main risks (Haiku). Then the CEO synthesises (Sonnet): a summary, at most 3 open questions with a recommended answer, and proposed tasks with size (S/M/L) and a token estimate.
+3. Edit the prefilled answers if you disagree and press **Approve** (MCP `approve_idea`, API `POST /api/ideas/:id/approve` with optional `{"answers": [...]}`). The proposed tasks are created with status `todo`; your answers are added to each brief.
+
+A discussion is capped at 60 000 tokens (`CREW_IDEA_CAP`). When the cap is reached the remaining roles are skipped and the summary is built from the opinions collected so far, without proposed tasks. Idea discussion never runs code and never creates tasks without your approval.
+
+## 4. How to Connect Claude Desktop & Claude Code via MCP
 
 The engine includes a bundled Model Context Protocol (MCP) server located at `engine/mcp/server.mts`. This lets Claude Desktop or Claude Code query team status, view tasks, inspect token spend, and interact with the Brain directly from your conversational assistant.
 
@@ -152,3 +162,4 @@ Once connected, Claude has access to the following tools:
 | `crew_create_task` | Create and dispatch a new task to the workforce |
 | `crew_brain_search` | Search decisions, specs, and knowledge base markdown files |
 | `crew_usage` | Fetch spend and token analytics across agents and tasks |
+| `discuss_idea` / `approve_idea` | Team discussion of a rough idea / create the proposed tasks |

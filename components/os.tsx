@@ -24,6 +24,7 @@ import type { ProjData } from "./mod/projects";
 import type { ProjectView } from "@/lib/services";
 import { snoozeUntil, TAB_OF, type ItemsData, type TaskUi } from "./mod/items";
 import type { Item } from "@/lib/items";
+import { mountIdeas } from "./mod/ideas";
 import { mountCrewGraph, loadInstructions } from "./mod/crew";
 import type { CrewTeamUi, CrewTasksUi, CrewUsageUi, CrewTxUi, CrewSendSt } from "./mod/crew";
 import type { TaskDetail as CrewTaskDetail, BrainHit, BrainNode, TranscriptMessage, Usage } from "@/lib/crew";
@@ -846,6 +847,7 @@ export function Os({ name }: { name?: string }) {
   vRef.current = sendChat;
   useEffect(() => bindVoice({ chat: (t) => { if (!busyRef.current) void vRef.current(t); }, task: (b, done) => sendRef.current("New task", b, done, undefined, "/api/tasks") }), []);
   useEffect(() => (root.current ? mountCharts(root.current) : undefined), [html]);
+  useEffect(() => { if (root.current?.querySelector("#ideas-root")) return mountIdeas(root.current); }, [html]);
   useEffect(() => { if (root.current?.querySelector("#crewgraph")) return mountCrewGraph(root.current); }, [html]);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key !== "Escape") return;

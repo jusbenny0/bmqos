@@ -116,5 +116,22 @@ server.registerTool("set_compact_tokens", {
   description: "Show the session compaction threshold (CREW_COMPACT_AT_TOKENS). Read-only: change it in the engine env and restart.",
 }, () => out(Promise.resolve({ compact_at_tokens: Number(process.env.CREW_COMPACT_AT_TOKENS) || 500_000, note: "set CREW_COMPACT_AT_TOKENS in the engine .env and restart" })));
 
+server.registerTool("discuss_idea", {
+  description: "Raw idea -> short team discussion (Designer, Builder, Security, Advisor; CEO synthesis). Returns summary, up to 3 open questions with recommended answers and proposed tasks. Call approve_idea to create the tasks.",
+  inputSchema: { text: z.string() },
+}, ({ text }) => out((async () => {
+  let idea = (await api("POST", "/api/ideas", { text })) as { id: number; status: string };
+  for (let i = 0; i < 60 && idea.status === "discussing"; i++) {
+    await new Promise((r) => setTimeout(r, 3000));
+    idea = (await api("GET", `/api/ideas/${idea.id}`)) as typeof idea;
+  }
+  return idea;
+})()));
+
+server.registerTool("approve_idea", {
+  description: "Approve a discussed idea: creates the proposed tasks. answers = optional replacements for the recommended answers, by question order.",
+  inputSchema: { id: z.number().int(), answers: z.array(z.string()).optional() },
+}, ({ id, answers }) => out(api("POST", `/api/ideas/${id}/approve`, { answers })));
+
 return server;
 }

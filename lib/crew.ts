@@ -149,6 +149,19 @@ export const message = (id: number, text: string, taskId?: number): Promise<Send
 export const chat = (text: string): Promise<SendResult> =>
   live() ? call("/api/chat", { method: "POST", body: JSON.stringify({ text }) }) : Promise.resolve({ reply: "(demo) I split up the request and assigned it to the team.", tokens: 0, cost_usd: 0 });
 
+/* ---------- ideas: rough idea -> team discussion -> approve -> tasks (engine /api/ideas) ---------- */
+export interface IdeaSynthesis { summary: string; questions: { q: string; recommended: string }[]; tasks: { title: string; brief: string; size: "S" | "M" | "L"; tokens: number }[] }
+export interface Idea { id: number; text: string; status: "discussing" | "ready" | "approved" | "failed"; opinions: { role: string; text: string }[]; synthesis: IdeaSynthesis | null; tokens: number; task_ids: number[]; created_at: string }
+const demoIdea = (id: number, text: string, status: Idea["status"]): Idea => ({ id, text, status, tokens: 0, task_ids: [], created_at: new Date().toISOString(),
+  opinions: [{ role: "Designer", text: "(demo) Keep the first version small." }, { role: "Builder", text: "(demo) Doable in one slice." }, { role: "Security", text: "(demo) No sensitive data in v1." }],
+  synthesis: { summary: "(demo) The team would build a small first slice.", questions: [{ q: "Who is the first user?", recommended: "The owner." }], tasks: [{ title: "First slice", brief: "Smallest useful version.", size: "S", tokens: 300_000 }] } });
+export const ideas = (): Promise<Idea[]> => live() ? call("/api/ideas") : Promise.resolve([]);
+export const idea = (id: number): Promise<Idea> => live() ? call(`/api/ideas/${id}`) : Promise.resolve(demoIdea(id, "(demo)", "ready"));
+export const createIdea = (text: string): Promise<Idea> =>
+  live() ? call("/api/ideas", { method: "POST", body: JSON.stringify({ text }) }) : Promise.resolve(demoIdea(1, text, "ready"));
+export const approveIdea = (id: number, answers: string[]): Promise<Idea> =>
+  live() ? call(`/api/ideas/${id}/approve`, { method: "POST", body: JSON.stringify({ answers }) }) : Promise.resolve({ ...demoIdea(id, "(demo)", "approved"), task_ids: [1] });
+
 export const brainSearch = (q: string): Promise<{ results: BrainHit[] }> => {
   if (live()) return call(`/api/brain/search?q=${encodeURIComponent(q)}`);
   const ql = q.trim().toLowerCase();

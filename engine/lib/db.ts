@@ -56,6 +56,16 @@ function open(): Database.Database {
       text TEXT NOT NULL DEFAULT '',
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
+    CREATE TABLE IF NOT EXISTS ideas (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      text TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'discussing' CHECK (status IN ('discussing','ready','approved','failed')),
+      opinions TEXT NOT NULL DEFAULT '[]',
+      synthesis TEXT,
+      tokens INTEGER NOT NULL DEFAULT 0,
+      task_ids TEXT NOT NULL DEFAULT '[]',
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
     CREATE INDEX IF NOT EXISTS idx_messages_employee ON messages(employee_id);
     CREATE INDEX IF NOT EXISTS idx_messages_task ON messages(task_id);
     CREATE INDEX IF NOT EXISTS idx_events_task ON events(task_id);

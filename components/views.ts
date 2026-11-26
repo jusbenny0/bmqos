@@ -14,6 +14,7 @@ import { settingsHTML, type PushState } from "./settings";
 import { docsHTML, type DocsData } from "./mod/docs";
 import { projectsHTML, projectHTML, type ProjData } from "./mod/projects";
 import { itemsHTML, TAB_OF, type ItemsData, type TaskUi } from "./mod/items";
+import { ideasHTML } from "./mod/ideas";
 import { crewTeamHTML, crewMemberSheet, crewTasksHTML, crewTaskSheet, crewUsageHTML, crewBrainHTML, crewNodeSheet, type CrewTeamUi, type CrewTasksUi, type CrewUsageUi, type CrewTxUi, type CrewSendSt } from "./mod/crew";
 import type { TaskDetail as CrewTaskDetail, BrainNode, BrainHit } from "@/lib/crew";
 
@@ -184,6 +185,7 @@ export const shell = (d: Snapshot, r: Route, compact: boolean, stale: string | n
   const body = r.s === "waiting" && r.q.issue ? waiting(d, r.q.issue, compact, ex) : TAB_OF[r.s] ? itemsHTML(ex.ix, r.s, r.q.item, compact, d, ex.tk) : r.s === "runs" ? runs(d, compact) : r.s === "servers" ? storageHTML(ex.stor, r.q.m, ex.tops, compact, servers(d)) : r.s === "docs" ? docsHTML(ex.docs, r.q, compact) : r.s === "settings" ? settingsHTML(ex.push) : r.s === "agents" ? overview(d, compact, hot) : r.s === "projects" ? projectsHTML(ex.proj, d.ventures) : r.s === "project" ? projectHTML(ex.proj, d.ventures, r.q.id ?? "") : r.s === "ops" ? ops()
     : r.s === "crew-team" ? crewTeamHTML(ex.crewTeam)
     : r.s === "crew-tasks" ? crewTasksHTML(ex.crewTasks, ex.crewTeam?.list ?? null, r.q.agent ?? "", compact)
+    : r.s === "crew-ideas" ? ideasHTML()
     : r.s === "crew-usage" ? crewUsageHTML(ex.crewUsage, r.q.range === "7d" ? "7d" : "24h", compact)
     : r.s === "crew-brain" ? crewBrainHTML(r.q.q ?? "", ex.crewBrainHits)
     : home(d, ex.post ? ex.soc : 0, hot, ex.ix);

@@ -238,7 +238,7 @@ Key variables:
 
 ## MCP server (talk to your company from Claude)
 
-A stdio MCP server (`mcp/server.mts`, official `@modelcontextprotocol/sdk`) wraps the Crew HTTP API. Tools: `give_task`, `list_tasks`, `task_status`, `approve` (status -> done), `answer` (message an agent; without `employee_id` it goes to the CEO), `team_status`, `spend_summary`.
+A stdio MCP server (`mcp/server.mts`, official `@modelcontextprotocol/sdk`) wraps the Crew HTTP API. Tools: `give_task`, `list_tasks`, `task_status`, `approve` (status -> done), `answer` (message an agent; without `employee_id` it goes to the CEO), `team_status`, `spend_summary`, `discuss_idea` (rough idea → team discussion → synthesis), `approve_idea` (creates the proposed tasks).
 
 Env: `CREW_URL` (default `http://localhost:3800`), `CREW_API_TOKEN` (Bearer, see `docs/api.md`).
 

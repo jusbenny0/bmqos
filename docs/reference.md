@@ -110,6 +110,11 @@ All requests to API endpoints require appropriate authentication (`Authorization
   - Lists playbooks / sets the default. See the [Playbooks guide](playbooks.md).
 - **`GET /api/playbooks/:id`**, **`PATCH /api/playbooks/:id`**
   - Returns a playbook plus its `brief` text / saves a partial override (`{"reset": true}` removes it).
+- **`GET /api/ideas`**, **`POST /api/ideas`** (`{"text"}`; returns 202, the team discusses in the background)
+- **`GET /api/ideas/:id`**
+  - `status`: `discussing`, `ready`, `approved`, `failed`; includes `opinions`, `synthesis` (summary, max 3 questions, proposed tasks), `tokens`.
+- **`POST /api/ideas/:id/approve`** (`{"answers"?: string[]}`)
+  - Creates the proposed tasks (`todo`). See the [How-to](how-to.md).
 
 ---
 
