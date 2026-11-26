@@ -2,7 +2,7 @@ import { esc } from "@/lib/stage";
 import { tok } from "@/lib/format";
 import { inline as mdi } from "@/lib/md";
 import { barChart, donut, usd } from "./charts";
-import type { BrainHit, BrainNode, Graph, Task, TaskDetail, TaskStatus, TeamMember, TranscriptMessage, Usage } from "@/lib/crew";
+import type { Persona, BrainHit, BrainNode, Graph, Task, TaskDetail, TaskStatus, TeamMember, TranscriptMessage, Usage } from "@/lib/crew";
 
 /* Crew (Company) – Team / Tasks / Spend / Brain. Data from proxy /api/crew/* (session-checked), shape per
    engine/docs/api.md. Defensive: missing/unknown fields don't render, .map is never called on an uncertain shape. */
@@ -43,15 +43,17 @@ const ROLES: [RegExp, string, string][] = [
 export const roleOf = (role: string): [string, string] => { const r = ROLES.find(([re]) => re.test(role)); return r ? [r[1], r[2]] : [role, ""]; };
 const clip = (s: string, n: number): string => (s.length > n ? `${s.slice(0, n).trimEnd()}…` : s);
 /* instructions load when the detail opens and overwrite #crins (without re-rendering the whole page) */
-const insCache = new Map<number, { p: string; engine?: string; em?: string | null }>();
+type Ins = { p: string; engine?: string; em?: string | null; persona?: Persona | null };
+const insCache = new Map<number, Ins>();
 export const loadInstructions = (id: number): void => {
   const paint = (): void => { const v = insCache.get(id); if (v) document.querySelectorAll(`[data-crins="${id}"]`).forEach((el) => { el.innerHTML = insHTML(v); }); };
   if (insCache.has(id)) return paint();
-  void fetch(`/api/crew/team/${id}/instructions`, { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)).then((j: { system_prompt: string; engine?: string; engine_model?: string | null } | null) => {
-    insCache.set(id, j ? { p: j.system_prompt, engine: j.engine, em: j.engine_model } : { p: "" }); paint();
+  void fetch(`/api/crew/team/${id}/instructions`, { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)).then((j: { system_prompt: string; engine?: string; engine_model?: string | null; persona?: Persona | null } | null) => {
+    insCache.set(id, j ? { p: j.system_prompt, engine: j.engine, em: j.engine_model, persona: j.persona } : { p: "" }); paint();
   }).catch(() => undefined);
 };
-const insHTML = (v: { p: string; engine?: string; em?: string | null }): string => (v.p ? `<div class="crins-p md">${mdi(v.p)}</div>` : '<div class="hint">No instructions set.</div>') + (v.engine && v.engine !== "claude" ? `<div class="hint" style="margin-top:8px">Runs via ${esc(v.engine)}${v.em ? ` · ${esc(v.em)}` : ""}</div>` : "");
+const personaHTML = (p?: Persona | null): string => p ? `<div class="hint" style="margin-bottom:8px"><b>Personality${p.name ? ` · ${esc(p.name)}` : ""}</b> — ${esc(p.tone)}${p.values.length ? `<br>Values: ${esc(p.values.join("; "))}` : ""}${p.avoid.length ? `<br>Avoids: ${esc(p.avoid.join("; "))}` : ""}</div>` : "";
+const insHTML = (v: Ins): string => personaHTML(v.persona) + (v.p ? `<div class="crins-p md">${mdi(v.p)}</div>` : '<div class="hint">No instructions set.</div>') + (v.engine && v.engine !== "claude" ? `<div class="hint" style="margin-top:8px">Runs via ${esc(v.engine)}${v.em ? ` · ${esc(v.em)}` : ""}</div>` : "");
 const memberCard = (m: TeamMember, i: number): string => {
   const st = mst(m);
   const dot = `<i class="dot${st === "busy" ? " p" : ""} ${st === "busy" ? "" : st === "wait" ? "a" : "g"}"></i>`;

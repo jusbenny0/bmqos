@@ -1,16 +1,20 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { parsePersona, personaOf } from "@/lib/config";
 
 // Edit cwd (git worktree/branch for builders), system_prompt and reset session_id
 // (PATCH {"session_id":null} = a fresh session, e.g. a new CEO session on request) without restarting the process.
 const EDITABLE = ["name", "role", "model", "system_prompt", "cwd", "session_id", "engine", "engine_model"] as const;
+
+// persona is stored as JSON text; the API speaks objects.
+const view = (e: Record<string, unknown> & { persona?: string | null }) => ({ ...e, persona: personaOf(e.persona) });
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const employee = db().prepare("SELECT * FROM employees WHERE id = ?").get(id);
   if (!employee) return NextResponse.json({ error: "not found" }, { status: 404 });
   const messages = db().prepare("SELECT * FROM messages WHERE employee_id = ? ORDER BY id").all(id);
-  return NextResponse.json({ ...employee, messages });
+  return NextResponse.json({ ...view(employee as Record<string, unknown>), messages });
 }
 
 // Edit cwd (git worktree/branch for builders) and system_prompt without restarting the process.
@@ -20,6 +24,11 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   if (b.model !== undefined && b.model !== "sonnet" && b.model !== "haiku") {
     return NextResponse.json({ error: "model must be sonnet|haiku" }, { status: 400 });
   }
+  // persona: {name?, tone, values[], avoid[]} to set, null to clear
+  const persona = b.persona === null ? null : parsePersona(b.persona);
+  if (b.persona !== undefined && b.persona !== null && !persona) {
+    return NextResponse.json({ error: "persona must be {name?, tone: string, values: string[], avoid: string[]} or null" }, { status: 400 });
+  }
   if (!db().prepare("SELECT 1 FROM employees WHERE id = ?").get(id)) {
     return NextResponse.json({ error: "not found" }, { status: 404 });
   }
@@ -28,10 +37,11 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     db().prepare(`UPDATE employees SET ${keys.map((k) => `${k} = ?`).join(", ")} WHERE id = ?`)
       .run(...keys.map((k) => b[k] as string | number | null), id);
   }
+  if ("persona" in b) db().prepare("UPDATE employees SET persona = ? WHERE id = ?").run(persona ? JSON.stringify(persona) : null, id);
   // Resetting session_id = a fresh session: also clear session_task_id/context_pct, otherwise they
   // would keep pointing at the old task/window.
   if ("session_id" in b && b.session_id === null) {
     db().prepare("UPDATE employees SET session_task_id = NULL, context_pct = 0 WHERE id = ?").run(id);
   }
-  return NextResponse.json(db().prepare("SELECT * FROM employees WHERE id = ?").get(id));
+  return NextResponse.json(view(db().prepare("SELECT * FROM employees WHERE id = ?").get(id) as Record<string, unknown>));
 }

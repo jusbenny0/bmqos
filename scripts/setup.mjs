@@ -389,10 +389,29 @@ const GROUP_LABELS = {
   planning: "planning (CEO)", building: "building (builders)", junior: "cheap junior", checks: "checks (reviewer/security/QA/visual)",
 };
 
+// Per role group: keep the default personality, pick a preset, or write a custom one (tone, values, avoid).
+async function askPersonas(presets, loadPreset) {
+  const out = {};
+  if (!presets.length) return out;
+  const rl = readline.createInterface({ input, output });
+  const list = (s) => s.split(",").map((x) => x.trim()).filter(Boolean);
+  console.log("\nPersonalities (Enter keeps the default for each group):");
+  for (const g of Object.keys(GROUP_LABELS)) {
+    const a = (await rl.question(`Personality for ${GROUP_LABELS[g]}? [${presets.join("/")}/custom]: `)).trim();
+    if (presets.includes(a)) out[g] = loadPreset(a);
+    else if (a === "custom") {
+      const tone = (await rl.question("  Tone: ")).trim();
+      if (tone) out[g] = { tone, values: list(await rl.question("  Values (comma separated): ")), avoid: list(await rl.question("  Avoid (comma separated): ")) };
+    }
+  }
+  rl.close();
+  return out;
+}
+
 // Detect AI services, let the user pick one per role group (or take the best with interactive=false), write engine roles.
 export async function runProviderSetup({ interactive = false, engineDir = ENGINE_DIR, detectOpts } = {}) {
   const P = await import("../engine/lib/providers.ts");
-  const { DEFAULT_TEAM } = await import("../engine/lib/config.ts");
+  const { DEFAULT_TEAM, listPresets, loadPreset } = await import("../engine/lib/config.ts");
   const found = await P.detect(detectOpts);
   console.log("\nDetected AI services:");
   for (const p of found) {
@@ -410,9 +429,13 @@ export async function runProviderSetup({ interactive = false, engineDir = ENGINE
     }
     rl.close();
   }
+  const personas = interactive ? await askPersonas(listPresets(), loadPreset) : {};
   for (const g of Object.keys(choice)) console.log(`  ${GROUP_LABELS[g]}: ${choice[g]}`);
   if (choice.planning === "mock") console.log("  No supported provider found: roles run in mock mode (install and log in to the claude CLI).");
-  const file = P.write(engineDir, P.buildRoles(DEFAULT_TEAM, choice));
+  const file = P.write(engineDir, P.buildRoles(DEFAULT_TEAM, choice).map((r) => {
+    const g = Object.keys(P.GROUPS).find((k) => P.GROUPS[k].includes(r.role));
+    return personas[g] ? { ...r, persona: personas[g] } : r;
+  }));
   console.log(`  Roles written to ${file} (CREW_ROLES_FILE in engine/.env)`);
   return { found, choice, file };
 }

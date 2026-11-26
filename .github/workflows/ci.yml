@@ -49,6 +49,7 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm run test:retro
+      - run: npm run test:persona
       - run: npm run test:mcp
       - run: npm run build
 

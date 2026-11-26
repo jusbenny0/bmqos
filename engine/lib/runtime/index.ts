@@ -3,7 +3,7 @@ import fs from "node:fs";
 import { db, type Employee } from "@/lib/db";
 import {
   AGY_CONTEXT_WINDOW, BLOCKED_MODEL, CEO_CWD, COMPACT_AT_BY_ROLE, COMPACT_AT_DEFAULT, CONTEXT_WINDOW, CREW_TOKEN, CREW_URL,
-  BASE_BRANCH, MAX_RETURNS, MAX_TURNS_BY_ROLE, MAX_TURNS_DEFAULT, RESET_AT_TOKENS_BY_ROLE, TIMEOUT_MS, useMock,
+  BASE_BRANCH, MAX_RETURNS, MAX_TURNS_BY_ROLE, MAX_TURNS_DEFAULT, RESET_AT_TOKENS_BY_ROLE, TIMEOUT_MS, personaOf, useMock, withPersona,
 } from "@/lib/config";
 import { RETRO_HINT, captureRetro } from "@/lib/retro";
 import { collectEvidence, stopPreview } from "@/lib/evidence";
@@ -175,7 +175,7 @@ async function doSend(empId: number, text: string, taskId?: number): Promise<Sen
     const team = db().prepare("SELECT id, name, role, engine FROM employees ORDER BY id").all() as { id: number; name: string; role: string; engine: string | null }[];
     return `\n\nCurrent state (from DB):\nTeam: ${team.map((e) => `${e.id} ${e.name} (${e.role}${e.engine ? "/" + e.engine : ""})`).join(", ")}\nOpen tasks: ${open.length ? open.map((t) => `#${t.id} [${t.status}${t.owner ? ", " + t.owner : ""}] ${t.title.slice(0, 80)}`).join("; ") : "none"}`;
   };
-  const prompt = emp.role === "ceo" ? `${ceoPrompt()}\n\n${emp.system_prompt}${emp.session_id ? "" : ceoState()}` : emp.system_prompt + workerHint + brainHint + (taskId ? RETRO_HINT : "");
+  const prompt = emp.role === "ceo" ? `${ceoPrompt()}\n\n${emp.system_prompt}${emp.session_id ? "" : ceoState()}` : withPersona(personaOf(emp.persona), emp.system_prompt) + workerHint + brainHint + (taskId ? RETRO_HINT : "");
 
   if (useMock(emp.engine)) {
     const r = doSendMock(emp, text);

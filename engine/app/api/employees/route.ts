@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db, type Employee } from "@/lib/db";
+import { personaOf } from "@/lib/config";
 
 // Team card: current task + last step, tokens today, last message.
 export function GET() {
@@ -19,7 +20,7 @@ export function GET() {
       ORDER BY e.id`,
     )
     .all();
-  return NextResponse.json(rows);
+  return NextResponse.json((rows as { persona: string | null }[]).map((r) => ({ ...r, persona: personaOf(r.persona) })));
 }
 
 export async function POST(req: Request) {

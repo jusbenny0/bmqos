@@ -127,10 +127,11 @@ export const task = async (id: number): Promise<TaskDetail> => {
 };
 export const usage = (range: "24h" | "7d"): Promise<Usage> => live() ? call(`/api/usage?range=${range}`) : Promise.resolve(mockUsage(range));
 /* employee instructions (system_prompt) – read-only, no messages */
-export const instructions = async (id: number): Promise<{ system_prompt: string; engine?: string; engine_model?: string | null }> => {
+export type Persona = { name?: string; tone: string; values: string[]; avoid: string[] };
+export const instructions = async (id: number): Promise<{ system_prompt: string; engine?: string; engine_model?: string | null; persona?: Persona | null }> => {
   if (!live()) return { system_prompt: "Demo mode – instructions load from Crew." };
-  const e = await call<{ system_prompt?: string; engine?: string; engine_model?: string | null }>(`/api/employees/${id}`);
-  return { system_prompt: e.system_prompt ?? "", engine: e.engine, engine_model: e.engine_model ?? null };
+  const e = await call<{ system_prompt?: string; engine?: string; engine_model?: string | null; persona?: Persona | null }>(`/api/employees/${id}`);
+  return { system_prompt: e.system_prompt ?? "", engine: e.engine, engine_model: e.engine_model ?? null, persona: e.persona ?? null };
 };
 export const transcript = (id: number, after: number): Promise<{ messages: TranscriptMessage[]; last_id: number }> => {
   if (live()) return call(`/api/team/${id}/transcript?after=${after}`);

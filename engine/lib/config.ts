@@ -13,7 +13,49 @@ export type RoleDef = {
   engine_model?: string; // concrete model for non-claude engines
   prompt: string;
   cwd?: string;
+  persona?: Persona; // optional personality, injected before the role instructions
 };
+export type Persona = { name?: string; tone: string; values: string[]; avoid: string[] };
+
+// Presets live in engine/personas/*.json (generic archetypes, no real people).
+export function loadPreset(id: string): Persona | undefined {
+  for (const base of [path.join(process.cwd(), "personas"), path.join(process.cwd(), "engine", "personas")]) {
+    try { return JSON.parse(fs.readFileSync(path.join(base, `${id}.json`), "utf8")) as Persona; } catch { /* next */ }
+  }
+}
+export const listPresets = (): string[] => {
+  for (const base of [path.join(process.cwd(), "personas"), path.join(process.cwd(), "engine", "personas")]) {
+    try { return fs.readdirSync(base).filter((f) => f.endsWith(".json")).map((f) => f.slice(0, -5)).sort(); } catch { /* next */ }
+  }
+  return [];
+};
+
+// Validate an untrusted persona (API/roles file): strings and string lists only. null = invalid.
+export function parsePersona(v: unknown): Persona | null {
+  const o = v as Partial<Persona> | null;
+  const list = (x: unknown) => Array.isArray(x) && x.every((i) => typeof i === "string");
+  if (!o || typeof o !== "object" || typeof o.tone !== "string" || !list(o.values) || !list(o.avoid)) return null;
+  if (o.name !== undefined && typeof o.name !== "string") return null;
+  return { ...(o.name ? { name: o.name } : {}), tone: o.tone, values: o.values!, avoid: o.avoid! };
+}
+
+// Stored employees.persona (JSON text) -> Persona, null when empty or invalid.
+export function personaOf(raw: string | null | undefined): Persona | null {
+  try { return raw ? parsePersona(JSON.parse(raw)) : null; } catch { return null; }
+}
+
+export const PERSONA_MAX = 600;
+// Short "Personality: ..." block for the system prompt, truncated to PERSONA_MAX chars. "" without a persona.
+export function personaBlock(p: Persona | null | undefined): string {
+  if (!p) return "";
+  const parts = [p.name && `You are "${p.name}".`, p.tone && `Tone: ${p.tone}.`, p.values.length && `Values: ${p.values.join("; ")}.`, p.avoid.length && `Avoid: ${p.avoid.join("; ")}.`].filter(Boolean);
+  if (!parts.length) return "";
+  const t = `Personality: ${parts.join(" ")}`;
+  return (t.length > PERSONA_MAX ? `${t.slice(0, PERSONA_MAX - 1).trimEnd()}…` : t) + "\n\n";
+}
+
+// Persona first, then the role instructions (which end with the retro lessons).
+export const withPersona = (persona: Persona | null | undefined, systemPrompt: string): string => personaBlock(persona) + systemPrompt;
 
 const int = (v: string | undefined, d: number) => (Number(v) > 0 ? Number(v) : d);
 
@@ -46,7 +88,12 @@ const BUILDER = `You are a builder (engineer). Your worktree (cwd) is an isolate
   `and use a subagent for larger reads (logs, diffs, many files). ` +
   `Finish with a commit + push (git push origin HEAD) + PR (gh pr create --base ${BASE_BRANCH}), or at least a handoff_note, otherwise the handoff to the reviewer fails.`;
 
-export const DEFAULT_TEAM: RoleDef[] = [
+const ROLE_PERSONA: Record<string, string> = {
+  ceo: "careful-senior", builder: "careful-senior", designer: "careful-senior", junior: "fast-pragmatist",
+  reviewer: "strict-reviewer", security: "strict-reviewer", visual: "strict-reviewer", qa: "strict-reviewer",
+};
+
+const TEAM: RoleDef[] = [
   { name: "CEO", role: "ceo", model: "sonnet", engine: "claude", prompt: "You are the CEO and planner of a small AI team. You break requests into tasks and delegate them to the team." },
   { name: "Builder A", role: "builder", model: "sonnet", engine: "claude", prompt: BUILDER },
   { name: "Builder B", role: "builder", model: "sonnet", engine: "claude", prompt: BUILDER },
@@ -67,6 +114,7 @@ export const DEFAULT_TEAM: RoleDef[] = [
     prompt: `You are QA (cheap model). You check ONLY UI/frontend tasks that earlier gates already approved and that have needs_qa=1. ` +
       `Review the diff/handoff_note against the task from the user's point of view: does the described flow work, is anything obviously broken (layout, missing state, console errors)? Only the diff, not the whole repo. At most ~10 steps. ${VERDICT}` },
 ];
+export const DEFAULT_TEAM: RoleDef[] = TEAM.map((r) => ({ ...r, persona: loadPreset(ROLE_PERSONA[r.role] ?? "careful-senior") }));
 
 // Roles are configurable: CREW_ROLES_FILE (path to a JSON array of RoleDef) or CREW_ROLES_JSON (inline JSON).
 // A configured list replaces the default team. Seeding is idempotent by name and never overwrites existing employees.
@@ -80,6 +128,7 @@ export function loadTeam(): RoleDef[] {
     if (!r.name || !r.role || !r.model || !["claude", "agy", "mock"].includes(r.engine ?? "claude")) throw new Error(`CREW_ROLES: invalid entry ${JSON.stringify(r.name ?? r)}`);
     r.engine ??= "claude";
     r.prompt ??= "";
+    if (r.persona !== undefined && !(r.persona = parsePersona(r.persona) ?? undefined)) throw new Error(`CREW_ROLES: invalid persona for ${r.name}`);
   }
   return list;
 }

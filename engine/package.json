@@ -8,6 +8,7 @@
     "mcp": "tsx mcp/server.mts",
     "test:mcp": "tsx scripts/mcp-test.mts",
     "test:retro": "tsx scripts/retro-test.mts",
+    "test:persona": "tsx scripts/persona-test.mts",
     "typecheck": "tsc --noEmit",
     "start:all": "node scripts/start-all.mjs"
   },

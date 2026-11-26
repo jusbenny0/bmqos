@@ -72,12 +72,14 @@ function open(): Database.Database {
   // engine/engine_model: the junior role can run on another CLI (agy) instead of claude.
   if (!cols("employees").includes("engine")) db.exec("ALTER TABLE employees ADD COLUMN engine TEXT NOT NULL DEFAULT 'claude'");
   if (!cols("employees").includes("engine_model")) db.exec("ALTER TABLE employees ADD COLUMN engine_model TEXT");
+  // persona: JSON {name?, tone, values[], avoid[]} injected before the role instructions.
+  if (!cols("employees").includes("persona")) db.exec("ALTER TABLE employees ADD COLUMN persona TEXT");
   // Seed the team from config (default team or CREW_ROLES_FILE/CREW_ROLES_JSON). Idempotent by name:
   // existing employees (session_id, cwd) are never overwritten, only missing ones are added.
-  const ins = db.prepare("INSERT INTO employees (name, role, model, system_prompt, cwd, engine, engine_model) VALUES (?, ?, ?, ?, ?, ?, ?)");
+  const ins = db.prepare("INSERT INTO employees (name, role, model, system_prompt, cwd, engine, engine_model, persona) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
   const has = db.prepare("SELECT 1 FROM employees WHERE name = ?");
   for (const r of loadTeam()) {
-    if (!has.get(r.name)) ins.run(r.name, r.role, r.model, r.prompt, r.cwd ?? "", r.engine, r.engine_model ?? null);
+    if (!has.get(r.name)) ins.run(r.name, r.role, r.model, r.prompt, r.cwd ?? "", r.engine, r.engine_model ?? null, r.persona ? JSON.stringify(r.persona) : null);
   }
   return db;
 }
@@ -90,7 +92,7 @@ export type Employee = {
   id: number; name: string; role: string; model: string;
   system_prompt: string; cwd: string; session_id: string | null; session_task_id: number | null;
   status: "idle" | "busy" | "error"; context_pct: number; created_at: string;
-  engine: "claude" | "agy" | "mock"; engine_model: string | null;
+  engine: "claude" | "agy" | "mock"; engine_model: string | null; persona: string | null;
 };
 export type Task = {
   id: number; title: string; brief: string; owner_id: number | null; reviewer_id: number | null;
