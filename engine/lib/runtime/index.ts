@@ -166,7 +166,7 @@ async function doSend(empId: number, text: string, taskId?: number): Promise<Sen
   save(empId, taskId, "user", text);
 
   const workerHint = taskId
-    ? `\n\nRecord the status of task #${taskId} via Bash: curl -s -X PATCH "$CREW_URL/api/tasks/${taskId}" -H "X-Crew-Token: $CREW_TOKEN" -H "Content-Type: application/json" -d '{"pr_url":"...","status":"review"}' (builder after the PR -> review, reviewer after approval -> done; reviewer_id/owner_id work the same way).`
+    ? `\n\nRecord the status of task #${taskId} via Bash: curl -s -X PATCH "$CREW_URL/api/tasks/${taskId}" -H "X-Crew-Token: $CREW_TOKEN" -H "Content-Type: application/json" -d '{"pr_url":"...","status":"review"}' (builder after the PR -> review; review roles never change the status, they only write the verdict line - the runtime sets done after the last gate).`
     : "";
   const brainHint = `\n\nBrain (knowledge base): do not read all of it. Search: curl -s "$CREW_URL/api/brain/search?q=<query>" -H "X-Crew-Token: $CREW_TOKEN", then only the node you need: curl -s "$CREW_URL/api/brain/node/<id>" -H "X-Crew-Token: $CREW_TOKEN". Record important decisions: curl -s -X POST "$CREW_URL/api/brain/decision" -H "X-Crew-Token: $CREW_TOKEN" -H "Content-Type: application/json" -d '{"title":"...","text":"what, why, who"}'.`;
   // CEO without a resumed session gets a compact state digest instead of re-reading history (cheap restart).

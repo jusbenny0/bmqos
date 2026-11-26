@@ -57,6 +57,10 @@ server.registerTool("team_status", {
   description: "Team: who works on what, last step, tokens today.",
 }, () => out(api("GET", "/api/team")));
 
+server.registerTool("list_providers", {
+  description: "Detected AI services on the engine host (CLI subscriptions, API keys by presence only, local models).",
+}, () => out(api("GET", "/api/providers")));
+
 server.registerTool("spend_summary", {
   description: "Token and cost usage per agent and task.",
   inputSchema: { range: z.enum(["24h", "7d"]).optional() },

@@ -11,6 +11,7 @@ import { stdin as input, stdout as output } from "node:process";
 const ROOT_DIR = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 // BMQOS_ENV_FILE lets tests (or a custom layout) write somewhere other than <repo>/.env
 const envPath = () => process.env.BMQOS_ENV_FILE || resolve(ROOT_DIR, ".env");
+const ENGINE_DIR = process.env.BMQOS_ENGINE_DIR || resolve(ROOT_DIR, "engine");
 const ENV_EXAMPLE_PATH = resolve(ROOT_DIR, ".env.example");
 
 const DEFAULT_AGENTS = [
@@ -46,6 +47,7 @@ Options:
   --db=<path>                Path to SQLite database (default: 'data/os.db')
   -y, --yes, --non-interactive
                              Run non-interactively with defaults or provided flags
+  --skip-providers           Skip AI provider detection / role selection
   -h, --help                 Display this help message
 
 Environment Variables:
@@ -76,6 +78,8 @@ function parseArgs(args) {
   for (const arg of args) {
     if (arg === "-h" || arg === "--help") {
       options.help = true;
+    } else if (arg === "--skip-providers") {
+      options.skipProviders = true;
     } else if (arg === "-y" || arg === "--yes" || arg === "--non-interactive") {
       options.interactive = false;
     } else if (arg.startsWith("--mode=")) {
@@ -381,13 +385,45 @@ export async function runSetup(opts) {
   };
 }
 
+const GROUP_LABELS = {
+  planning: "planning (CEO)", building: "building (builders)", junior: "cheap junior", checks: "checks (reviewer/security/QA/visual)",
+};
+
+// Detect AI services, let the user pick one per role group (or take the best with interactive=false), write engine roles.
+export async function runProviderSetup({ interactive = false, engineDir = ENGINE_DIR, detectOpts } = {}) {
+  const P = await import("../engine/lib/providers.ts");
+  const { DEFAULT_TEAM } = await import("../engine/lib/config.ts");
+  const found = await P.detect(detectOpts);
+  console.log("\nDetected AI services:");
+  for (const p of found) {
+    const note = P.supportNote(p);
+    console.log(`  ${p.available ? "[x]" : "[ ]"} ${p.id.padEnd(15)} ${p.kind.padEnd(17)} ${p.detail}${note ? ` (${note})` : ""}`);
+  }
+  const choice = P.plan(found);
+  if (interactive) {
+    const usable = found.filter(P.isSupported).map((p) => p.id);
+    const rl = readline.createInterface({ input, output });
+    for (const g of Object.keys(choice)) {
+      if (usable.length < 2) break;
+      const a = (await rl.question(`Use for ${GROUP_LABELS[g]}? [${usable.join("/")}] (default ${choice[g]}): `)).trim();
+      if (usable.includes(a)) choice[g] = a;
+    }
+    rl.close();
+  }
+  for (const g of Object.keys(choice)) console.log(`  ${GROUP_LABELS[g]}: ${choice[g]}`);
+  if (choice.planning === "mock") console.log("  No supported provider found: roles run in mock mode (install and log in to the claude CLI).");
+  const file = P.write(engineDir, P.buildRoles(DEFAULT_TEAM, choice));
+  console.log(`  Roles written to ${file} (CREW_ROLES_FILE in engine/.env)`);
+  return { found, choice, file };
+}
+
 if (process.argv[1] && resolve(process.argv[1]) === resolve(fileURLToPath(import.meta.url))) {
   const options = parseArgs(process.argv.slice(2));
   if (options.help) {
     printHelp();
     process.exit(0);
   }
-  runSetup(options).catch((err) => {
+  runSetup(options).then(() => (options.skipProviders ? null : runProviderSetup({ interactive: options.interactive }))).catch((err) => {
     console.error("Setup failed:", err);
     process.exit(1);
   });

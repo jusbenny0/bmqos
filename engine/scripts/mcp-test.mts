@@ -28,7 +28,7 @@ const text = (r: unknown) => (r as { content: { text: string }[] }).content[0].t
 
 const c = await run("t0k");
 const names = (await c.listTools()).tools.map((t) => t.name).sort();
-assert.deepEqual(names, ["answer", "approve", "give_task", "list_tasks", "spend_summary", "task_status", "team_status"]);
+assert.deepEqual(names, ["answer", "approve", "give_task", "list_providers", "list_tasks", "spend_summary", "task_status", "team_status"]);
 await c.callTool({ name: "give_task", arguments: { title: "T", brief: "B" } });
 assert.equal(JSON.parse(text(await c.callTool({ name: "list_tasks", arguments: { status: "done" } }))).length, 1);
 await c.callTool({ name: "task_status", arguments: { id: 5 } });

@@ -36,6 +36,11 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   if (b.status !== undefined && !STATUSES.includes(String(b.status))) {
     return NextResponse.json({ error: "bad status" }, { status: 400 });
   }
+  // Agents (X-Crew-Token) may not close or reopen a task themselves: "done" is set only by the runtime after
+  // the last required gate (Security/Visual/QA), otherwise a reviewer could skip the remaining gates.
+  if (req.headers.get("x-crew-token") && b.status !== undefined && !["doing", "review"].includes(String(b.status))) {
+    return NextResponse.json({ error: "done/blocked/todo is set by the runtime; end your reply with the verdict line instead" }, { status: 403 });
+  }
   const keys = EDITABLE.filter((k) => k in b);
   if (!load(id)) return NextResponse.json({ error: "not found" }, { status: 404 });
   if (keys.length) {

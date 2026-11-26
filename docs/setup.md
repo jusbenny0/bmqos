@@ -137,3 +137,7 @@ Verify that the application starts cleanly with your configured database:
 curl -I http://127.0.0.1:3000/
 # Returns HTTP 200 (or HTTP 307 redirect to /login if password auth is active)
 ```
+
+## AI providers and roles
+
+After the main setup, `npm run setup` detects the AI services on the machine (Claude Code / Antigravity / Gemini / Codex CLIs, API keys by presence only, local Ollama / LM Studio) and lets you choose which one each role group uses: planning, building, cheap junior, checks. `--yes` picks the best available automatically; `--skip-providers` skips the step. The result is written to `engine/data/roles.json` and referenced by `CREW_ROLES_FILE` in `engine/.env`. Today only the `claude` and `agy` runtimes exist; other detected services are listed as "detected, not supported yet". The engine exposes the same detection at `GET /api/providers` and as the MCP tool `list_providers`.
