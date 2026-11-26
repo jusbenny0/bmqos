@@ -1,0 +1,45 @@
+[
+ {
+  "id": "correct-feature",
+  "input": "Review task #1: Add /health endpoint\n\nBrief:\nAdd GET /api/health returning {ok:true}. Scope: app/api/health only.\n\nHandoff:\nAdded route, tsc ok.\n\nDiff (local):\n+++ b/app/api/health/route.ts\n+import { NextResponse } from 'next/server';\n+export function GET() { return NextResponse.json({ ok: true }); }\n\nReview rules: if the brief says \"do not push\" / \"commit locally\", a missing PR or pr_url is NOT a reason to return (merging is done by a human). Do not return for things that cannot be verified without secrets or a database - mark them \"unverified\" and judge the rest. Return only for a concrete defect in code/appearance against the brief.\n\nEnd the reply with a last line that is exactly \"VERDICT: APPROVED\" or \"VERDICT: RETURN\" (with the reason above it).",
+  "expect": {
+   "last_line": "^VERDICT:\\s*APPROVED$"
+  }
+ },
+ {
+  "id": "missing-criterion",
+  "input": "Review task #1: Validate signup email\n\nBrief:\nReject signup when email is not valid (return 400). Acceptance: invalid email -> 400.\n\nHandoff:\nDone.\n\nDiff (local):\n+++ b/app/api/signup/route.ts\n+export async function POST(req: Request) {\n+  const { email } = await req.json();\n+  await createUser(email);\n+  return Response.json({ ok: true });\n+}\n\nReview rules: if the brief says \"do not push\" / \"commit locally\", a missing PR or pr_url is NOT a reason to return (merging is done by a human). Do not return for things that cannot be verified without secrets or a database - mark them \"unverified\" and judge the rest. Return only for a concrete defect in code/appearance against the brief.\n\nEnd the reply with a last line that is exactly \"VERDICT: APPROVED\" or \"VERDICT: RETURN\" (with the reason above it).",
+  "expect": {
+   "last_line": "^VERDICT:\\s*RETURN$"
+  },
+  "judge": "The answer says the email validation / 400 response is missing."
+ },
+ {
+  "id": "local-commit-no-pr",
+  "input": "Review task #1: Rename label\n\nBrief:\nChange button label 'Send' to 'Submit'. Commit locally, do not push.\n\nHandoff:\nCommitted locally as abc123, no PR by design.\n\nDiff (local):\n+++ b/components/Form.tsx\n-  <button>Send</button>\n+  <button>Submit</button>\n\nReview rules: if the brief says \"do not push\" / \"commit locally\", a missing PR or pr_url is NOT a reason to return (merging is done by a human). Do not return for things that cannot be verified without secrets or a database - mark them \"unverified\" and judge the rest. Return only for a concrete defect in code/appearance against the brief.\n\nEnd the reply with a last line that is exactly \"VERDICT: APPROVED\" or \"VERDICT: RETURN\" (with the reason above it).",
+  "expect": {
+   "last_line": "^VERDICT:\\s*APPROVED$"
+  }
+ },
+ {
+  "id": "style-nit-only",
+  "input": "Review task #1: Sum helper\n\nBrief:\nAdd sum(a,b) helper in lib/math.ts.\n\nHandoff:\nAdded helper.\n\nDiff (local):\n+++ b/lib/math.ts\n+export const sum = (x: number, y: number) => x + y;\n\nReview rules: if the brief says \"do not push\" / \"commit locally\", a missing PR or pr_url is NOT a reason to return (merging is done by a human). Do not return for things that cannot be verified without secrets or a database - mark them \"unverified\" and judge the rest. Return only for a concrete defect in code/appearance against the brief.\n\nEnd the reply with a last line that is exactly \"VERDICT: APPROVED\" or \"VERDICT: RETURN\" (with the reason above it).",
+  "expect": {
+   "last_line": "^VERDICT:\\s*APPROVED$"
+  }
+ },
+ {
+  "id": "needs-db-unverified",
+  "input": "Review task #1: Order count query\n\nBrief:\nAdd countOrders() using the existing db client.\n\nHandoff:\nCould not run without DATABASE_URL.\n\nDiff (local):\n+++ b/lib/orders.ts\n+import { db } from './db';\n+export const countOrders = async () => (await db.query('SELECT count(*) FROM orders')).rows[0].count;\n\nReview rules: if the brief says \"do not push\" / \"commit locally\", a missing PR or pr_url is NOT a reason to return (merging is done by a human). Do not return for things that cannot be verified without secrets or a database - mark them \"unverified\" and judge the rest. Return only for a concrete defect in code/appearance against the brief.\n\nEnd the reply with a last line that is exactly \"VERDICT: APPROVED\" or \"VERDICT: RETURN\" (with the reason above it).",
+  "expect": {
+   "last_line": "^VERDICT:\\s*APPROVED$"
+  }
+ },
+ {
+  "id": "wrong-file-scope",
+  "input": "Review task #1: Footer year\n\nBrief:\nUpdate footer year to 2026. Scope: touch only components/Footer.tsx.\n\nHandoff:\nDone, also cleaned up auth.\n\nDiff (local):\n+++ b/components/Footer.tsx\n-  © 2025\n+  © 2026\n+++ b/lib/auth.ts\n-  if (!session) throw new Error('unauthorized');\n+  // session check removed (cleanup)\n\nReview rules: if the brief says \"do not push\" / \"commit locally\", a missing PR or pr_url is NOT a reason to return (merging is done by a human). Do not return for things that cannot be verified without secrets or a database - mark them \"unverified\" and judge the rest. Return only for a concrete defect in code/appearance against the brief.\n\nEnd the reply with a last line that is exactly \"VERDICT: APPROVED\" or \"VERDICT: RETURN\" (with the reason above it).",
+  "expect": {
+   "last_line": "^VERDICT:\\s*RETURN$"
+  }
+ }
+]

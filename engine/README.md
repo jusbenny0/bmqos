@@ -270,3 +270,12 @@ Claude Desktop (`claude_desktop_config.json`):
 ## License
 
 This project is licensed under the MIT License.
+
+
+## Evals
+
+Each role can have an exam file in `evals/<role>.json` (input + expected verdict checked by code, or a rule checked by a cheap LLM judge). Run `npm run eval`. Lessons learned from retrospectives enter a role prompt only if its eval pass rate does not drop (`CREW_EVAL_GATE=0` disables). See `evals/README.md`.
+
+## Context compaction
+
+Agent sessions are compacted (summarised, not dropped) once the context passes `CREW_COMPACT_AT_TOKENS` (default 500,000). The same value is passed to Claude Code as `CLAUDE_CODE_AUTO_COMPACT_WINDOW`, so auto-compact inside a long run fires at the same size.

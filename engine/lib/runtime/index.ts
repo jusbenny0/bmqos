@@ -2,7 +2,7 @@ import { spawn, execFile } from "node:child_process";
 import fs from "node:fs";
 import { db, type Employee } from "@/lib/db";
 import {
-  AGY_CONTEXT_WINDOW, BLOCKED_MODEL, CEO_CWD, COMPACT_AT_BY_ROLE, COMPACT_AT_DEFAULT, CONTEXT_WINDOW, CREW_TOKEN, CREW_URL,
+  AGY_CONTEXT_WINDOW, BLOCKED_MODEL, CEO_CWD, COMPACT_AT_BY_ROLE, COMPACT_AT_TOKENS, COMPACT_AT_DEFAULT, CONTEXT_WINDOW, CREW_TOKEN, CREW_URL,
   BASE_BRANCH, MAX_RETURNS, MAX_TURNS_BY_ROLE, MAX_TURNS_DEFAULT, RESET_AT_TOKENS_BY_ROLE, TIMEOUT_MS, personaOf, useMock, withPersona,
 } from "@/lib/config";
 import { RETRO_HINT, captureRetro } from "@/lib/retro";
@@ -213,6 +213,8 @@ async function doSend(empId: number, text: string, taskId?: number): Promise<Sen
 
   const env = {
     PATH: process.env.PATH, HOME: process.env.HOME,
+    // Claude Code's own auto-compact inside one run fires at the same size as the runtime compaction.
+    CLAUDE_CODE_AUTO_COMPACT_WINDOW: String(COMPACT_AT_TOKENS),
     CREW_URL, CREW_TOKEN,
   } as unknown as NodeJS.ProcessEnv;
   // The CEO gets an empty cwd outside any repo (no code/git/CLAUDE.md), specialists get their own worktree.
@@ -247,7 +249,8 @@ async function doSend(empId: number, text: string, taskId?: number): Promise<Sen
     const pct = Math.min(100, (lastCtx / window) * 100);
     save(empId, taskId, "assistant", r.result ?? "", usage, costUsd);
 
-    const compactAt = COMPACT_AT_BY_ROLE[emp.role] ?? COMPACT_AT_DEFAULT;
+    // Compact at an absolute size (default 500k tokens), never above the role's % of the model window.
+    const compactAtTokens = Math.min(COMPACT_AT_TOKENS, window * (COMPACT_AT_BY_ROLE[emp.role] ?? COMPACT_AT_DEFAULT) / 100);
     let ctx = pct;
     // Cost guard: a long session re-reads its whole context on every reply (CEO reached ~$4-5 per answer).
     // Roles in RESET_AT_TOKENS_BY_ROLE start a fresh session once the context passes the limit; their state lives in the DB/brain.
@@ -256,7 +259,7 @@ async function doSend(empId: number, text: string, taskId?: number): Promise<Sen
       sessionId = "";
       ctx = 0;
       if (taskId) ev(taskId, "status", `${emp.name}: new session (context ${Math.round(lastCtx / 1000)}k tokens, cost saving)`);
-    } else if (pct >= compactAt && sessionId) {
+    } else if (lastCtx >= compactAtTokens && sessionId) {
       try {
         const c = await runClaude([...base, "--resume", sessionId, "/compact"], cwd, env);
         sessionId = c.session_id ?? sessionId;

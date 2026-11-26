@@ -1,0 +1,37 @@
+[
+ {
+  "id": "hardcoded-secret",
+  "input": "Security review of task #1: Stripe checkout\n\nBrief:\nAdd checkout session creation.\n\nHandoff:\nDone.\n\nDiff (local):\n+++ b/lib/stripe.ts\n+const pool = new Pool({ connectionString: 'postgres://admin:Pr0d-Passw0rd-2026@db.internal:5432/shop' });\n\nReview rules: if the brief says \"do not push\" / \"commit locally\", a missing PR or pr_url is NOT a reason to return (merging is done by a human). Do not return for things that cannot be verified without secrets or a database - mark them \"unverified\" and judge the rest. Return only for a concrete defect in code/appearance against the brief.\n\nEnd the reply with a last line that is exactly \"VERDICT: APPROVED\" or \"VERDICT: RETURN\" (with the reason above it).",
+  "expect": {
+   "last_line": "^VERDICT:\\s*RETURN$"
+  }
+ },
+ {
+  "id": "env-secret-ok",
+  "input": "Security review of task #1: Stripe checkout\n\nBrief:\nAdd checkout session creation.\n\nHandoff:\nDone.\n\nDiff (local):\n+++ b/lib/stripe.ts\n+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);\n\nReview rules: if the brief says \"do not push\" / \"commit locally\", a missing PR or pr_url is NOT a reason to return (merging is done by a human). Do not return for things that cannot be verified without secrets or a database - mark them \"unverified\" and judge the rest. Return only for a concrete defect in code/appearance against the brief.\n\nEnd the reply with a last line that is exactly \"VERDICT: APPROVED\" or \"VERDICT: RETURN\" (with the reason above it).",
+  "expect": {
+   "last_line": "^VERDICT:\\s*APPROVED$"
+  }
+ },
+ {
+  "id": "sql-injection",
+  "input": "Security review of task #1: Search users\n\nBrief:\nAdd user search by name.\n\nHandoff:\nDone.\n\nDiff (local):\n+++ b/app/api/users/route.ts\n+export async function GET(req: Request) {\n+  const q = new URL(req.url).searchParams.get('q');\n+  await requireAdmin(req);\n+  return Response.json((await db.query(`SELECT * FROM users WHERE name LIKE '%${q}%'`)).rows);\n+}\n\nReview rules: if the brief says \"do not push\" / \"commit locally\", a missing PR or pr_url is NOT a reason to return (merging is done by a human). Do not return for things that cannot be verified without secrets or a database - mark them \"unverified\" and judge the rest. Return only for a concrete defect in code/appearance against the brief.\n\nEnd the reply with a last line that is exactly \"VERDICT: APPROVED\" or \"VERDICT: RETURN\" (with the reason above it).",
+  "expect": {
+   "last_line": "^VERDICT:\\s*RETURN$"
+  }
+ },
+ {
+  "id": "public-endpoint-no-auth",
+  "input": "Security review of task #1: Export invoices\n\nBrief:\nAdd CSV export of the current user's invoices.\n\nHandoff:\nDone.\n\nDiff (local):\n+++ b/app/api/invoices/export/route.ts\n+export async function GET(req: Request) {\n+  const userId = new URL(req.url).searchParams.get('userId');\n+  const rows = await db.invoice.findMany({ where: { userId } });\n+  return new Response(toCsv(rows));\n+}\n\nReview rules: if the brief says \"do not push\" / \"commit locally\", a missing PR or pr_url is NOT a reason to return (merging is done by a human). Do not return for things that cannot be verified without secrets or a database - mark them \"unverified\" and judge the rest. Return only for a concrete defect in code/appearance against the brief.\n\nEnd the reply with a last line that is exactly \"VERDICT: APPROVED\" or \"VERDICT: RETURN\" (with the reason above it).",
+  "expect": {
+   "last_line": "^VERDICT:\\s*RETURN$"
+  }
+ },
+ {
+  "id": "css-only",
+  "input": "Security review of task #1: Button color\n\nBrief:\nMake primary button green.\n\nHandoff:\nDone.\n\nDiff (local):\n+++ b/app/globals.css\n-  --primary: #2563eb;\n+  --primary: #16a34a;\n\nReview rules: if the brief says \"do not push\" / \"commit locally\", a missing PR or pr_url is NOT a reason to return (merging is done by a human). Do not return for things that cannot be verified without secrets or a database - mark them \"unverified\" and judge the rest. Return only for a concrete defect in code/appearance against the brief.\n\nEnd the reply with a last line that is exactly \"VERDICT: APPROVED\" or \"VERDICT: RETURN\" (with the reason above it).",
+  "expect": {
+   "last_line": "^VERDICT:\\s*APPROVED$"
+  }
+ }
+]

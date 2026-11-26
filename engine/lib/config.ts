@@ -74,7 +74,10 @@ export const MAX_TURNS_BY_ROLE: Record<string, number> = { builder: 40, reviewer
 export const RESET_AT_TOKENS_BY_ROLE: Record<string, number> = {
   ceo: int(process.env.CREW_CEO_RESET_TOKENS, 60_000), reviewer: 80_000, qa: 80_000, security: 80_000,
 };
-export const COMPACT_AT_DEFAULT = 60; // % of context window
+// Sessions are compacted (summarised, not dropped) once the context passes this size. Models have 1M windows;
+// compacting at 500k keeps each turn cheaper while preserving the task history.
+export const COMPACT_AT_TOKENS = int(process.env.CREW_COMPACT_AT_TOKENS, 500_000);
+export const COMPACT_AT_DEFAULT = 60; // % of context window (upper bound for smaller windows)
 export const COMPACT_AT_BY_ROLE: Record<string, number> = { ceo: 45 };
 export const MAX_RETURNS = int(process.env.CREW_MAX_RETURNS, 2); // how often a gate may send work back to the builder
 export const TOKEN_CAP_BY_SIZE: Record<string, number> = {

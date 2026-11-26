@@ -4,6 +4,7 @@ import { spawn } from "node:child_process";
 import { db } from "@/lib/db";
 import { BRAIN_DIR } from "@/lib/brain";
 import { CEO_CWD, useMock } from "@/lib/config";
+import { gatePrompt } from "@/lib/evals";
 
 // Self-improving team. Every agent run on a task ends with one RETRO line (what was missing / what it learned).
 // A cheap judge (one Haiku call per batch) rates them useful / dup / noise and applies the useful ones:
@@ -11,6 +12,7 @@ import { CEO_CWD, useMock } from "@/lib/config";
 //   brain   -> brain/team/lessons.md (shared by the whole team)
 //   owner   -> brain/team/missing.md (a tool, access or secret the agents cannot fix themselves - work for you)
 // Lessons that weaken the process (skip checks, raise limits, push to main) are rejected as noise.
+// Prompt lessons are applied only if the role's evals (evals/<role>.json) do not get worse.
 // Disable with CREW_RETRO=0. Overview: GET /api/retro, judge pending now: POST /api/retro.
 
 export const RETRO_ON = process.env.CREW_RETRO !== "0";
@@ -113,6 +115,7 @@ ${rows.map((r) => `{"id":${r.id},"role":"${r.name}","kind":"${r.kind}","task":${
     const byId = new Map(rows.map((r) => [r.id, r]));
     const upd = db().prepare("UPDATE learnings SET verdict = ?, target = ?, rule = ?, judged_at = datetime('now') WHERE id = ?");
     let applied = 0;
+    const promptRules = new Map<number, { role: string; name: string; ids: number[]; rules: string[] }>();
     for (const o of out) {
       const r = byId.get(o.id);
       if (!r) continue;
@@ -120,16 +123,30 @@ ${rows.map((r) => `{"id":${r.id},"role":"${r.name}","kind":"${r.kind}","task":${
       const rule = (o.rule ?? "").replace(/\s+/g, " ").trim().slice(0, 220);
       upd.run(verdict, o.target ?? null, rule || null, o.id);
       if (verdict !== "useful" || !rule) continue;
-      applied++;
       if (o.target === "prompt") {
-        const cur = (db().prepare("SELECT system_prompt FROM employees WHERE id = ?").get(r.emp) as { system_prompt: string }).system_prompt;
-        db().prepare("UPDATE employees SET system_prompt = ? WHERE id = ?").run(addLesson(cur, rule), r.emp);
-        appendBrain("lessons.md", "Team lessons (from retrospectives)", `[${r.name}] ${rule}`);
-      } else if (o.target === "owner" || o.target === "hermes") {
+        const g = promptRules.get(r.emp) ?? { role: r.role, name: r.name, ids: [], rules: [] };
+        g.ids.push(o.id); g.rules.push(rule); promptRules.set(r.emp, g);
+        continue;
+      }
+      applied++;
+      if (o.target === "owner" || o.target === "hermes") {
         appendBrain("missing.md", "What the agents are missing (for the owner)", `[${r.name}, #${r.task_id ?? "-"}] ${rule}`);
       } else {
         appendBrain("lessons.md", "Team lessons (from retrospectives)", `[team] ${rule}`);
       }
+    }
+    // Prompt lessons pass the role's evals first (lib/evals.ts): a lesson that lowers the pass rate is dropped.
+    for (const [emp, g] of promptRules) {
+      const cur = (db().prepare("SELECT system_prompt FROM employees WHERE id = ?").get(emp) as { system_prompt: string }).system_prompt;
+      const candidate = g.rules.reduce((p, rule) => addLesson(p, rule), cur);
+      const gate = await gatePrompt(g.role, candidate).catch(() => ({ ok: true, before: 0, after: 0, total: 0 }));
+      if (!gate.ok) {
+        for (const id of g.ids) upd.run("rejected_by_eval", "prompt", `evals ${gate.before}->${gate.after}/${gate.total}`, id);
+        continue;
+      }
+      db().prepare("UPDATE employees SET system_prompt = ? WHERE id = ?").run(candidate, emp);
+      for (const rule of g.rules) appendBrain("lessons.md", "Team lessons (from retrospectives)", `[${g.name}] ${rule}`);
+      applied += g.rules.length;
     }
     return { judged: out.length, applied };
   } finally {

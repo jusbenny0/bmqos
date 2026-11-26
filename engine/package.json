@@ -8,6 +8,8 @@
     "mcp": "tsx mcp/server.mts",
     "test:mcp": "tsx scripts/mcp-test.mts",
     "test:retro": "tsx scripts/retro-test.mts",
+    "test:evals": "tsx scripts/evals-test.mts",
+    "eval": "tsx scripts/eval.mts",
     "test:persona": "tsx scripts/persona-test.mts",
     "test:advisors": "tsx scripts/advisors-test.mts",
     "typecheck": "tsc --noEmit",
