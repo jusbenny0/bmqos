@@ -7,7 +7,7 @@ import path from "node:path";
 export type Engine = "claude" | "agy" | "mock";
 export type RoleDef = {
   name: string;
-  role: string; // ceo | builder | junior | designer | reviewer | security | visual | qa (pipeline roles)
+  role: string; // ceo | builder | junior | designer | reviewer | security | visual | qa (pipeline roles); optional "advisor" is outside the pipeline, see lib/advisors.ts
   model: string; // claude CLI model alias or id (e.g. "sonnet", "haiku")
   engine: Engine; // claude CLI by default, agy (Antigravity CLI) optional
   engine_model?: string; // concrete model for non-claude engines
@@ -25,7 +25,7 @@ export function loadPreset(id: string): Persona | undefined {
 }
 export const listPresets = (): string[] => {
   for (const base of [path.join(process.cwd(), "personas"), path.join(process.cwd(), "engine", "personas")]) {
-    try { return fs.readdirSync(base).filter((f) => f.endsWith(".json")).map((f) => f.slice(0, -5)).sort(); } catch { /* next */ }
+    try { return fs.readdirSync(base).filter((f) => f.endsWith(".json") && !f.startsWith("advisor-")).map((f) => f.slice(0, -5)).sort(); } catch { /* next */ }
   }
   return [];
 };

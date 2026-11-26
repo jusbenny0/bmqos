@@ -19,7 +19,7 @@ export async function middleware(req: NextRequest) {
 
   if (pathname.startsWith("/api/") && bearerOk(req.headers.get("authorization"))) return NextResponse.next();
 
-  if (pathname === "/api/delegate" || pathname.startsWith("/api/brain/") || pathname === "/api/tasks" || pathname.startsWith("/api/tasks/")) {
+  if (pathname === "/api/delegate" || pathname.startsWith("/api/advisors/") || pathname.startsWith("/api/brain/") || pathname === "/api/tasks" || pathname.startsWith("/api/tasks/")) {
     if (same(req.headers.get("x-crew-token") ?? "", process.env.CREW_TOKEN ?? "")) return NextResponse.next();
   }
 
